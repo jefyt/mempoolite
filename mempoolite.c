@@ -80,10 +80,10 @@ struct mempoolite_link {
 */
 #define mempoolite_getlink(handle, idx) ((mempoolite_link_t *)(&handle->zPool[(idx)*handle->szAtom]))
 
-#define mempoolite_enter(handle)			if((handle != NULL) && ((handle)->mutex.mutex != NULL))	\
-		{ (handle)->mutex.lock((handle)->mutex.mutex); }
-#define mempoolite_leave(handle)			if((handle != NULL) && ((handle)->mutex.mutex != NULL))	\
-		{ (handle)->mutex.unlock((handle)->mutex.mutex); }
+#define mempoolite_enter(handle)			if((handle != NULL) && ((handle)->mutex.lock != NULL))	\
+		{ (handle)->mutex.acquire((handle)->mutex.lock); }
+#define mempoolite_leave(handle)			if((handle != NULL) && ((handle)->mutex.lock != NULL))	\
+		{ (handle)->mutex.release((handle)->mutex.lock); }
 
 static int mempoolite_logarithm(const int iValue);
 static int mempoolite_size(const mempoolite_t *handle, const void *p);
@@ -111,7 +111,7 @@ int mempoolite_construct(mempoolite_t *handle, const void *buf, const int buf_si
 		memcpy(&handle->mutex, mutex, sizeof(handle->mutex));
 	}
 	else {
-		handle->mutex.mutex = NULL;
+		handle->mutex.lock = NULL;
 	}
 
 	/* The size of a mempoolite_link_t object must be a power of two.  Verify that

@@ -18,9 +18,9 @@
 
 typedef struct mempoolite_mutex
 {
-	void *mutex;
-	int (*lock)(void *mutex);
-	int (*unlock)(void *mutex);
+	void *lock;
+	int (*acquire)(void *lock);
+	int (*release)(void *lock);
 } mempoolite_mutex_t;
 
 typedef struct mempoolite {
