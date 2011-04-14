@@ -41,9 +41,6 @@
 ** fragmentation as long as the following constraint holds:
 **
 **      N >=  M*(1 + log2(n)/2) - n + 1
-**
-** The sqlite3_status() logic tracks the maximum values of n and M so
-** that an application can, at any time, verify this constraint.
 */
 #include "mempoolite.h"
 
