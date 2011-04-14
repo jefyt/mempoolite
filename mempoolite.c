@@ -86,14 +86,14 @@ struct mempoolite_link {
 		{ (handle)->mutex.unlock((handle)->mutex.mutex); }
 
 static int mempoolite_logarithm(int iValue);
-static int mempoolite_size(const mempoolite_t *handle, void *p);
+static int mempoolite_size(const mempoolite_t *handle, const void *p);
 static void mempoolite_link(mempoolite_t *handle, int i, int iLogsize);
 static void mempoolite_unlink(mempoolite_t *handle, int i, int iLogsize);
 static int mempoolite_unlink_first(mempoolite_t *handle, int iLogsize);
 static void *mempoolite_malloc_unsafe(mempoolite_t *handle, int nByte);
-static void mempoolite_free_unsafe(mempoolite_t *handle, void *pOld);
+static void mempoolite_free_unsafe(mempoolite_t *handle, const void *pOld);
 
-int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex)
+int mempoolite_construct(mempoolite_t *handle, const void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex)
 {
 	int ii;            /* Loop counter */
 	int nByte;         /* Number of bytes of memory available to this allocator */
@@ -158,33 +158,43 @@ void mempoolite_destruct(mempoolite_t *handle)
 
 void *mempoolite_malloc(mempoolite_t *handle, const int nBytes) {
 	int64_t *p = 0;
-	if( nBytes>0 ) {
-		mempoolite_enter(handle);
-		p = mempoolite_malloc_unsafe(handle, nBytes);
-		mempoolite_leave(handle);
+
+	/* Check the parameters */
+	if((NULL == handle) || (nBytes <= 0)) {
+		return NULL;
 	}
+
+	mempoolite_enter(handle);
+	p = mempoolite_malloc_unsafe(handle, nBytes);
+	mempoolite_leave(handle);
+
 	return (void*)p;
 }
 
-void mempoolite_free(mempoolite_t *handle, void *pPrior) {
-	assert( pPrior!=0 );
+void mempoolite_free(mempoolite_t *handle, const void *pPrior) {
+	/* Check the parameters */
+	if((NULL == handle) || (NULL == pPrior)) {
+		return;
+	}
+
 	mempoolite_enter(handle);
 	mempoolite_free_unsafe(handle, pPrior);
 	mempoolite_leave(handle);
 }
 
-void *mempoolite_realloc(mempoolite_t *handle, void *pPrior, const int nBytes) {
+void *mempoolite_realloc(mempoolite_t *handle, const void *pPrior, const int nBytes) {
 	int nOld;
 	void *p;
-	assert( pPrior!=0 );
-	assert( (nBytes&(nBytes-1))==0 );  /* EV: R-46199-30249 */
-	assert( nBytes>=0 );
-	if( nBytes==0 ) {
-		return 0;
+
+	/* Check the parameters */
+	if(	(NULL == handle) || (NULL == pPrior) || (nBytes <= 0) ||
+		(nBytes & (nBytes - 1))) {
+		return NULL;
 	}
+
 	nOld = mempoolite_size(handle, pPrior);
 	if( nBytes<=nOld ) {
-		return pPrior;
+		return (void *)pPrior;
 	}
 	mempoolite_enter(handle);
 	p = mempoolite_malloc_unsafe(handle, nBytes);
@@ -193,13 +203,20 @@ void *mempoolite_realloc(mempoolite_t *handle, void *pPrior, const int nBytes) {
 		mempoolite_free_unsafe(handle, pPrior);
 	}
 	mempoolite_leave(handle);
+
 	return p;
 }
 
 int mempoolite_roundup(mempoolite_t *handle, const int n) {
 	int iFullSz;
-	if( n > 0x40000000 ) return 0;
+
+	/* Check the parameters */
+	if((NULL == handle) || ( n > 0x40000000 )) {
+		return 0;
+	}
+
 	for(iFullSz=handle->szAtom; iFullSz<n; iFullSz *= 2);
+
 	return iFullSz;
 }
 
@@ -224,7 +241,7 @@ static int mempoolite_logarithm(int iValue) {
 ** size returned omits the 8-byte header overhead.  This only
 ** works for chunks that are currently checked out.
 */
-static int mempoolite_size(const mempoolite_t *handle, void *p) {
+static int mempoolite_size(const mempoolite_t *handle, const void *p) {
 	int iSize = 0;
 	if( p ) {
 		int i = ((uint8_t *)p-handle->zPool)/handle->szAtom;
@@ -364,7 +381,7 @@ static void *mempoolite_malloc_unsafe(mempoolite_t *handle, int nByte) {
 /*
 ** Free an outstanding memory allocation.
 */
-static void mempoolite_free_unsafe(mempoolite_t *handle, void *pOld) {
+static void mempoolite_free_unsafe(mempoolite_t *handle, const void *pOld) {
 	uint32_t size, iLogsize;
 	int iBlock;
 

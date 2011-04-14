@@ -68,7 +68,7 @@ typedef struct mempoolite {
 ** This routine is not threadsafe.  The caller must be holding a mutex
 ** to prevent multiple threads from entering at the same time.
 */
-int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex);
+int mempoolite_construct(mempoolite_t *handle, const void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex);
 
 /*
 ** Deinitialize this module.
@@ -86,7 +86,7 @@ void *mempoolite_malloc(mempoolite_t *handle, const int nBytes);
 ** The outer layer memory allocator prevents this routine from
 ** being called with pPrior==0.
 */
-void mempoolite_free(mempoolite_t *handle, void *pPrior);
+void mempoolite_free(mempoolite_t *handle, const void *pPrior);
 
 /*
 ** Change the size of an existing memory allocation.
@@ -100,7 +100,7 @@ void mempoolite_free(mempoolite_t *handle, void *pPrior);
 ** (an allocation larger than 0x40000000) was requested and this
 ** routine should return 0 without freeing pPrior.
 */
-void *mempoolite_realloc(mempoolite_t *handle, void *pPrior, const int nBytes);
+void *mempoolite_realloc(mempoolite_t *handle, const void *pPrior, const int nBytes);
 
 /*
 ** Round up a request size to the next valid allocation size.  If
