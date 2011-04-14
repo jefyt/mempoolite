@@ -121,7 +121,6 @@ int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, co
 
 	nByte = buf_size;
 	zByte = (uint8_t*)buf;
-	assert( zByte!=0 );
 
 	nMinLog = mempoolite_logarithm(min_alloc);
 	handle->szAtom = (1<<nMinLog);
