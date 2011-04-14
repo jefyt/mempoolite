@@ -42,6 +42,7 @@ int main()
 	mempoolite_lock_t pool_lock;
 	pthread_mutex_t mutex;
 	int test_again;
+	int iScanfRes;
 
 	pthread_mutex_init(&mutex, NULL);
 
@@ -49,11 +50,11 @@ int main()
 	do {
 		printf("Memory pool testing using mempoolite API\n");
 		printf("Enter the total memory block size: ");
-		scanf("%u", &buffer_size);
+		iScanfRes = scanf("%u", &buffer_size);
 		printf("Enter the minimum memory allocation size: ");
-		scanf("%u", &min_alloc);
+		iScanfRes = scanf("%u", &min_alloc);
 		printf("Enter the number of threads to run for multi-threaded test: ");
-		scanf("%u", &num_threads);
+		iScanfRes = scanf("%u", &num_threads);
 		buffer = malloc(buffer_size);
 
 		printf("buffer = %p size = %u minimum alloc = %u\n", buffer, buffer_size,
@@ -66,6 +67,7 @@ int main()
 			printf("malloc = %p counter = %u\n", temp, counter);
 			counter++;
 		}
+		mempoolite_print_stats(&pool, puts);
 
 		printf("Multi-threaded test...\n");
 		pool_lock.arg = (void *) &mutex;
@@ -85,13 +87,14 @@ int main()
 		for (counter = 0; counter < num_threads; counter++) {
 			pthread_join(threads[counter], NULL);
 		}
+		mempoolite_print_stats(&pool, puts);
 		free(threads_param);
 		free(threads);
 
 		free(buffer);
 
 		printf("Test again? <0:false, non-zero:true>: ");
-		scanf("%d", &test_again);
+		iScanfRes = scanf("%d", &test_again);
 	}
 	while (test_again);
 
