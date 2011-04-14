@@ -21,7 +21,7 @@
  ** be changed.
  **
  ** This version of the memory allocation subsystem is included
- ** in the build only if SQLITE_ENABLE_MEMSYS5 is defined.
+ ** in the build only if MEMPOOLITE_ENABLED is defined.
  **
  ** This memory allocator uses the following algorithm:
  **
@@ -52,9 +52,9 @@
 
 /*
  ** This version of the memory allocator is used only when
- ** SQLITE_ENABLE_MEMSYS5 is defined.
+ ** MEMPOOLITE_ENABLED is defined.
  */
-#ifdef SQLITE_ENABLE_MEMSYS5
+#if MEMPOOLITE_ENABLED
 
 /*
  ** A minimum allocation is an instance of the following structure.
@@ -271,8 +271,7 @@ memsys5MallocUnsafe(int nByte) {
 	}
 
 	/* Round nByte up to the next valid power of two */
-	for (iFullSz = mem5.szAtom, iLogsize = 0; iFullSz < nByte; iFullSz *= 2,
-			iLogsize++) {
+	for (iFullSz = mem5.szAtom, iLogsize = 0; iFullSz < nByte; iFullSz *= 2, iLogsize++) {
 	}
 
 	/* Make sure mem5.aiFreelist[iLogsize] contains at least one free
@@ -606,4 +605,5 @@ sqlite3MemGetMemsys5(void) {
 	return &memsys5Methods;
 }
 
-#endif /* SQLITE_ENABLE_MEMSYS5 */
+#endif /* #if MEMPOOLITE_ENABLED */
+
