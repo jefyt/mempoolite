@@ -15,6 +15,7 @@ int main()
 
 	/* Get the buffer and size */
 	do {
+		printf("Memory pool testing using mempoolite API\n");
 		printf("Enter the total memory block size: ");
 		scanf("%u", &buffer_size);
 		printf("Enter the minimum memory allocation size: ");

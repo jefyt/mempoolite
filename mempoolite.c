@@ -188,7 +188,7 @@ void *mempoolite_realloc(mempoolite_t *handle, const void *pPrior, const int nBy
 
 	/* Check the parameters */
 	if(	(NULL == handle) || (NULL == pPrior) || (nBytes <= 0) ||
-		(nBytes & (nBytes - 1))) {
+			(nBytes & (nBytes - 1))) {
 		return NULL;
 	}
 
