@@ -335,7 +335,7 @@ static void *mempoolite_malloc_unsafe(mempoolite_t *handle, const int nByte) {
 	** power of two that we can represent using 32-bit signed integers.
 	*/
 	if( nByte > 0x40000000 ) {
-		return 0;
+		return NULL;
 	}
 
 	/* Round nByte up to the next valid power of two */
