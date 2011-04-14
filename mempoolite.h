@@ -28,6 +28,14 @@
  *        integer. Hence the largest allocation is 0x40000000 or 1073741824.
  */
 #define MEMPOOLITE_MAX_ALLOC_SIZE	0x40000000
+/**
+ * @brief An indicator that a function is a public API
+ */
+#define MEMPOOLITE_API
+/**
+ * @brief An indicator that a function is a private API
+ */
+#define MEMPOOLITE_PRIVATE_API	static
 
 /**
  * @brief Lock object to be used in a threadsafe memory pool
@@ -102,8 +110,9 @@ typedef struct mempoolite
  * @return @ref MEMPOOLITE_OK on success and @ref MEMPOOLITE_ERR_INVPAR on invalid
  *         parameters error.
  */
-int mempoolite_init(mempoolite_t *handle, const void *buf, const int buf_size,
-				 const int min_alloc, const mempoolite_lock_t *lock);
+MEMPOOLITE_API int mempoolite_init(mempoolite_t *handle, const void *buf,
+							 const int buf_size, const int min_alloc,
+							 const mempoolite_lock_t *lock);
 
 /**
  * @brief Allocate bytes of memory
@@ -111,14 +120,14 @@ int mempoolite_init(mempoolite_t *handle, const void *buf, const int buf_size,
  * @param[in] nBytes Number of bytes to allocate
  * @return Non-NULL on success, NULL otherwise
  */
-void *mempoolite_malloc(mempoolite_t *handle, const int nBytes);
+MEMPOOLITE_API void *mempoolite_malloc(mempoolite_t *handle, const int nBytes);
 
 /**
  * @brief Free memory
  * @param[in,out] handle Pointer to an initialized @ref mempoolite_t object
  * @param[in] pPrior Allocated buffer
  */
-void mempoolite_free(mempoolite_t *handle, const void *pPrior);
+MEMPOOLITE_API void mempoolite_free(mempoolite_t *handle, const void *pPrior);
 
 /**
  * @brief Change the size of an existing memory allocation.
@@ -132,7 +141,8 @@ void mempoolite_free(mempoolite_t *handle, const void *pPrior);
  *                   this routine should return NULL without freeing pPrior.
  * @return Non-NULL on success, NULL otherwise
  */
-void *mempoolite_realloc(mempoolite_t *handle, const void *pPrior, const int nBytes);
+MEMPOOLITE_API void *mempoolite_realloc(mempoolite_t *handle, const void *pPrior,
+								  const int nBytes);
 
 /**
  * @brief Round up a request size to the next valid allocation size.
@@ -141,7 +151,7 @@ void *mempoolite_realloc(mempoolite_t *handle, const void *pPrior, const int nBy
  * @return Positive non-zero value if the size can be allocated or zero if the
  *         allocation is too large to be handled.
  */
-int mempoolite_roundup(mempoolite_t *handle, const int n);
+MEMPOOLITE_API int mempoolite_roundup(mempoolite_t *handle, const int n);
 
 #endif /* #ifndef MEMPOOLITE_H */
 
