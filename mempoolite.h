@@ -3,10 +3,11 @@
 
 #include <stdint.h>
 
-typedef uint8_t u8;
-typedef uint32_t u32;
-typedef uint64_t u64;
-typedef int64_t s64;
+#define MEMPOOLITE_OK			0
+#define MEMPOOLITE_ERR_INVPAR	-1
+#define MEMPOOLITE_ERR_NOMEM	-2
+
+#define MEMPOOLITE_UNUSED_PARAM(param)	(void)(param)
 
 /*
 ** Maximum size of any allocation is ((1<<MEMPOOLITE_LOGMAX)*mempoolite_t.szAtom). Since
@@ -28,7 +29,7 @@ typedef struct mempoolite {
 	*/
 	int szAtom;      /* Smallest possible allocation in bytes */
 	int nBlock;      /* Number of szAtom sized blocks in zPool */
-	u8 *zPool;       /* Memory available to be allocated */
+	uint8_t *zPool;  /* Memory available to be allocated */
 
 	/*
 	** Mutex to control access to the memory allocation subsystem.
@@ -38,14 +39,14 @@ typedef struct mempoolite {
 	/*
 	** Performance statistics
 	*/
-	u64 nAlloc;         /* Total number of calls to malloc */
-	u64 totalAlloc;     /* Total of all malloc calls - includes internal frag */
-	u64 totalExcess;    /* Total internal fragmentation */
-	u32 currentOut;     /* Current checkout, including internal fragmentation */
-	u32 currentCount;   /* Current number of distinct checkouts */
-	u32 maxOut;         /* Maximum instantaneous currentOut */
-	u32 maxCount;       /* Maximum instantaneous currentCount */
-	u32 maxRequest;     /* Largest allocation (exclusive of internal frag) */
+	uint64_t nAlloc;         /* Total number of calls to malloc */
+	uint64_t totalAlloc;     /* Total of all malloc calls - includes internal frag */
+	uint64_t totalExcess;    /* Total internal fragmentation */
+	uint32_t currentOut;     /* Current checkout, including internal fragmentation */
+	uint32_t currentCount;   /* Current number of distinct checkouts */
+	uint32_t maxOut;         /* Maximum instantaneous currentOut */
+	uint32_t maxCount;       /* Maximum instantaneous currentCount */
+	uint32_t maxRequest;     /* Largest allocation (exclusive of internal frag) */
 
 	/*
 	** Lists of free blocks.  aiFreelist[0] is a list of free blocks of
@@ -58,7 +59,7 @@ typedef struct mempoolite {
 	** Space for tracking which blocks are checked out and the size
 	** of each block.  One byte per block.
 	*/
-	u8 *aCtrl;
+	uint8_t *aCtrl;
 } mempoolite_t;
 
 /*

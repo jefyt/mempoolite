@@ -81,9 +81,9 @@ struct mempoolite_link {
 #define mempoolite_getlink(handle, idx) ((mempoolite_link_t *)(&handle->zPool[(idx)*handle->szAtom]))
 
 #define mempoolite_enter(handle)			if((handle != NULL) && ((handle)->mutex.mutex != NULL))	\
-										{ (handle)->mutex.lock((handle)->mutex.mutex); }
+		{ (handle)->mutex.lock((handle)->mutex.mutex); }
 #define mempoolite_leave(handle)			if((handle != NULL) && ((handle)->mutex.mutex != NULL))	\
-										{ (handle)->mutex.unlock((handle)->mutex.mutex); }
+		{ (handle)->mutex.unlock((handle)->mutex.mutex); }
 
 static int mempoolite_logarithm(int iValue);
 static int mempoolite_size(const mempoolite_t *handle, void *p);
@@ -97,9 +97,14 @@ int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, co
 {
 	int ii;            /* Loop counter */
 	int nByte;         /* Number of bytes of memory available to this allocator */
-	u8 *zByte;         /* Memory usable by this allocator */
+	uint8_t *zByte;         /* Memory usable by this allocator */
 	int nMinLog;       /* Log base 2 of minimum allocation size in bytes */
 	int iOffset;       /* An offset into handle->aCtrl[] */
+
+	/* Check the parameters */
+	if((NULL == handle) || (NULL == buf) || (buf_size <= 0) || (min_alloc <= 0)) {
+		return MEMPOOLITE_ERR_INVPAR;
+	}
 
 	/* Copy the mutex if it is not NULL */
 	if(mutex != NULL) {
@@ -115,7 +120,7 @@ int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, co
 	assert( (sizeof(mempoolite_link_t)&(sizeof(mempoolite_link_t)-1))==0 );
 
 	nByte = buf_size;
-	zByte = (u8*)buf;
+	zByte = (uint8_t*)buf;
 	assert( zByte!=0 );
 
 	nMinLog = mempoolite_logarithm(min_alloc);
@@ -124,9 +129,9 @@ int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, co
 		handle->szAtom = handle->szAtom << 1;
 	}
 
-	handle->nBlock = (nByte / (handle->szAtom+sizeof(u8)));
+	handle->nBlock = (nByte / (handle->szAtom+sizeof(uint8_t)));
 	handle->zPool = zByte;
-	handle->aCtrl = (u8 *)&handle->zPool[handle->nBlock*handle->szAtom];
+	handle->aCtrl = (uint8_t *)&handle->zPool[handle->nBlock*handle->szAtom];
 
 	for(ii=0; ii<=MEMPOOLITE_LOGMAX; ii++) {
 		handle->aiFreelist[ii] = -1;
@@ -143,18 +148,17 @@ int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, co
 		assert((iOffset+nAlloc)>handle->nBlock);
 	}
 
-	return 0;
+	return MEMPOOLITE_OK;
 }
 
 void mempoolite_destruct(mempoolite_t *handle)
 {
 	/* For now, do nothing */
-	handle = handle;
-	return;
+	MEMPOOLITE_UNUSED_PARAM(handle);
 }
 
 void *mempoolite_malloc(mempoolite_t *handle, const int nBytes) {
-	s64 *p = 0;
+	int64_t *p = 0;
 	if( nBytes>0 ) {
 		mempoolite_enter(handle);
 		p = mempoolite_malloc_unsafe(handle, nBytes);
@@ -224,7 +228,7 @@ static int mempoolite_logarithm(int iValue) {
 static int mempoolite_size(const mempoolite_t *handle, void *p) {
 	int iSize = 0;
 	if( p ) {
-		int i = ((u8 *)p-handle->zPool)/handle->szAtom;
+		int i = ((uint8_t *)p-handle->zPool)/handle->szAtom;
 		assert( i>=0 && i<handle->nBlock );
 		iSize = handle->szAtom * (1 << (handle->aCtrl[i]&MEMPOOLITE_CTRL_LOGSIZE));
 	}
@@ -312,7 +316,7 @@ static void *mempoolite_malloc_unsafe(mempoolite_t *handle, int nByte) {
 
 	/* Keep track of the maximum allocation request.  Even unfulfilled
 	** requests are counted */
-	if( (u32)nByte>handle->maxRequest ) {
+	if( (uint32_t)nByte>handle->maxRequest ) {
 		handle->maxRequest = nByte;
 	}
 
@@ -362,22 +366,22 @@ static void *mempoolite_malloc_unsafe(mempoolite_t *handle, int nByte) {
 ** Free an outstanding memory allocation.
 */
 static void mempoolite_free_unsafe(mempoolite_t *handle, void *pOld) {
-	u32 size, iLogsize;
+	uint32_t size, iLogsize;
 	int iBlock;
 
 	/* Set iBlock to the index of the block pointed to by pOld in
 	** the array of handle->szAtom byte blocks pointed to by handle->zPool.
 	*/
-	iBlock = ((u8 *)pOld-handle->zPool)/handle->szAtom;
+	iBlock = ((uint8_t *)pOld-handle->zPool)/handle->szAtom;
 
 	/* Check that the pointer pOld points to a valid, non-free block. */
 	assert( iBlock>=0 && iBlock<handle->nBlock );
-	assert( ((u8 *)pOld-handle->zPool)%handle->szAtom==0 );
+	assert( ((uint8_t *)pOld-handle->zPool)%handle->szAtom==0 );
 	assert( (handle->aCtrl[iBlock] & MEMPOOLITE_CTRL_FREE)==0 );
 
 	iLogsize = handle->aCtrl[iBlock] & MEMPOOLITE_CTRL_LOGSIZE;
 	size = 1<<iLogsize;
-	assert( iBlock+size-1<(u32)handle->nBlock );
+	assert( iBlock+size-1<(uint32_t)handle->nBlock );
 
 	handle->aCtrl[iBlock] |= MEMPOOLITE_CTRL_FREE;
 	handle->aCtrl[iBlock+size-1] |= MEMPOOLITE_CTRL_FREE;
