@@ -25,15 +25,13 @@ int main()
 		printf("buffer = %p size = %u minimum alloc = %u\n", buffer, buffer_size,
 			   min_alloc);
 
-		mempoolite_construct(&pool, buffer, buffer_size, min_alloc, NULL);
+		mempoolite_init(&pool, buffer, buffer_size, min_alloc, NULL);
 		printf("Allocation in loop\n");
 		counter = 1;
 		while((temp = mempoolite_malloc(&pool, min_alloc)) != NULL) {
 			printf("malloc = %p counter = %u\n", temp, counter);
 			counter++;
 		}
-
-		mempoolite_destruct(&pool);
 
 		free(buffer);
 

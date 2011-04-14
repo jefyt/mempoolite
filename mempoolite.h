@@ -68,12 +68,7 @@ typedef struct mempoolite {
 ** This routine is not threadsafe.  The caller must be holding a mutex
 ** to prevent multiple threads from entering at the same time.
 */
-int mempoolite_construct(mempoolite_t *handle, const void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex);
-
-/*
-** Deinitialize this module.
-*/
-void mempoolite_destruct(mempoolite_t *handle);
+int mempoolite_init(mempoolite_t *handle, const void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex);
 
 /*
 ** Allocate nBytes of memory

@@ -60,7 +60,7 @@
 ** size of the array is a power of 2.
 **
 ** The size of this object must be a power of two.  That fact is
-** verified in mempoolite_construct().
+** verified in mempoolite_init().
 */
 typedef struct mempoolite_link mempoolite_link_t;
 struct mempoolite_link {
@@ -93,7 +93,7 @@ static int mempoolite_unlink_first(mempoolite_t *handle, const int iLogsize);
 static void *mempoolite_malloc_unsafe(mempoolite_t *handle, const int nByte);
 static void mempoolite_free_unsafe(mempoolite_t *handle, const void *pOld);
 
-int mempoolite_construct(mempoolite_t *handle, const void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex)
+int mempoolite_init(mempoolite_t *handle, const void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex)
 {
 	int ii;            /* Loop counter */
 	int nByte;         /* Number of bytes of memory available to this allocator */
@@ -148,12 +148,6 @@ int mempoolite_construct(mempoolite_t *handle, const void *buf, const int buf_si
 	}
 
 	return MEMPOOLITE_OK;
-}
-
-void mempoolite_destruct(mempoolite_t *handle)
-{
-	/* For now, do nothing */
-	MEMPOOLITE_UNUSED_PARAM(handle);
 }
 
 void *mempoolite_malloc(mempoolite_t *handle, const int nBytes) {
