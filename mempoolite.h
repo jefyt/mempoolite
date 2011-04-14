@@ -61,11 +61,55 @@ typedef struct mempoolite {
 	u8 *aCtrl;
 } mempoolite_t;
 
+/*
+** Initialize the memory allocator.
+**
+** This routine is not threadsafe.  The caller must be holding a mutex
+** to prevent multiple threads from entering at the same time.
+*/
 int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex);
+
+/*
+** Deinitialize this module.
+*/
 void mempoolite_destruct(mempoolite_t *handle);
+
+/*
+** Allocate nBytes of memory
+*/
 void *mempoolite_malloc(mempoolite_t *handle, const int nBytes);
+
+/*
+** Free memory.
+**
+** The outer layer memory allocator prevents this routine from
+** being called with pPrior==0.
+*/
 void mempoolite_free(mempoolite_t *handle, void *pPrior);
+
+/*
+** Change the size of an existing memory allocation.
+**
+** The outer layer memory allocator prevents this routine from
+** being called with pPrior==0.
+**
+** nBytes is always a value obtained from a prior call to
+** memsys5Round().  Hence nBytes is always a non-negative power
+** of two.  If nBytes==0 that means that an oversize allocation
+** (an allocation larger than 0x40000000) was requested and this
+** routine should return 0 without freeing pPrior.
+*/
 void *mempoolite_realloc(mempoolite_t *handle, void *pPrior, const int nBytes);
+
+/*
+** Round up a request size to the next valid allocation size.  If
+** the allocation is too large to be handled by this allocation system,
+** return 0.
+**
+** All allocations must be a power of two and must be expressed by a
+** 32-bit signed integer.  Hence the largest allocation is 0x40000000
+** or 1073741824 bytes.
+*/
 int mempoolite_roundup(mempoolite_t *handle, const int n);
 
 #endif /* #ifndef MEMPOOLITE_H */

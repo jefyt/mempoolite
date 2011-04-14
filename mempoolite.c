@@ -74,8 +74,8 @@ struct mempoolite_link {
 /*
 ** Masks used for mempoolite_t.aCtrl[] elements.
 */
-#define CTRL_LOGSIZE  0x1f    /* Log2 Size of this block */
-#define CTRL_FREE     0x20    /* True if not checked out */
+#define MEMPOOLITE_CTRL_LOGSIZE  0x1f    /* Log2 Size of this block */
+#define MEMPOOLITE_CTRL_FREE     0x20    /* True if not checked out */
 
 /*
 ** Assuming mempoolite_t.zPool is divided up into an array of mempoolite_link_t
@@ -96,12 +96,6 @@ static int mempoolite_unlink_first(mempoolite_t *handle, int iLogsize);
 static void *mempoolite_malloc_unsafe(mempoolite_t *handle, int nByte);
 static void mempoolite_free_unsafe(mempoolite_t *handle, void *pOld);
 
-/*
-** Initialize the memory allocator.
-**
-** This routine is not threadsafe.  The caller must be holding a mutex
-** to prevent multiple threads from entering at the same time.
-*/
 int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex)
 {
 	int ii;            /* Loop counter */
@@ -145,7 +139,7 @@ int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, co
 	for(ii=MEMPOOLITE_LOGMAX; ii>=0; ii--) {
 		int nAlloc = (1<<ii);
 		if( (iOffset+nAlloc)<=handle->nBlock ) {
-			handle->aCtrl[iOffset] = ii | CTRL_FREE;
+			handle->aCtrl[iOffset] = ii | MEMPOOLITE_CTRL_FREE;
 			mempoolite_link(handle, iOffset, ii);
 			iOffset += nAlloc;
 		}
@@ -155,9 +149,6 @@ int mempoolite_construct(mempoolite_t *handle, void *buf, const int buf_size, co
 	return 0;
 }
 
-/*
-** Deinitialize this module.
-*/
 void mempoolite_destruct(mempoolite_t *handle)
 {
 	/* For now, do nothing */
@@ -165,9 +156,6 @@ void mempoolite_destruct(mempoolite_t *handle)
 	return;
 }
 
-/*
-** Allocate nBytes of memory
-*/
 void *mempoolite_malloc(mempoolite_t *handle, const int nBytes) {
 	s64 *p = 0;
 	if( nBytes>0 ) {
@@ -178,12 +166,6 @@ void *mempoolite_malloc(mempoolite_t *handle, const int nBytes) {
 	return (void*)p;
 }
 
-/*
-** Free memory.
-**
-** The outer layer memory allocator prevents this routine from
-** being called with pPrior==0.
-*/
 void mempoolite_free(mempoolite_t *handle, void *pPrior) {
 	assert( pPrior!=0 );
 	mempoolite_enter(handle);
@@ -191,18 +173,6 @@ void mempoolite_free(mempoolite_t *handle, void *pPrior) {
 	mempoolite_leave(handle);
 }
 
-/*
-** Change the size of an existing memory allocation.
-**
-** The outer layer memory allocator prevents this routine from
-** being called with pPrior==0.
-**
-** nBytes is always a value obtained from a prior call to
-** memsys5Round().  Hence nBytes is always a non-negative power
-** of two.  If nBytes==0 that means that an oversize allocation
-** (an allocation larger than 0x40000000) was requested and this
-** routine should return 0 without freeing pPrior.
-*/
 void *mempoolite_realloc(mempoolite_t *handle, void *pPrior, const int nBytes) {
 	int nOld;
 	void *p;
@@ -226,15 +196,6 @@ void *mempoolite_realloc(mempoolite_t *handle, void *pPrior, const int nBytes) {
 	return p;
 }
 
-/*
-** Round up a request size to the next valid allocation size.  If
-** the allocation is too large to be handled by this allocation system,
-** return 0.
-**
-** All allocations must be a power of two and must be expressed by a
-** 32-bit signed integer.  Hence the largest allocation is 0x40000000
-** or 1073741824 bytes.
-*/
 int mempoolite_roundup(mempoolite_t *handle, const int n) {
 	int iFullSz;
 	if( n > 0x40000000 ) return 0;
@@ -268,7 +229,7 @@ static int mempoolite_size(const mempoolite_t *handle, void *p) {
 	if( p ) {
 		int i = ((u8 *)p-handle->zPool)/handle->szAtom;
 		assert( i>=0 && i<handle->nBlock );
-		iSize = handle->szAtom * (1 << (handle->aCtrl[i]&CTRL_LOGSIZE));
+		iSize = handle->szAtom * (1 << (handle->aCtrl[i]&MEMPOOLITE_CTRL_LOGSIZE));
 	}
 	return iSize;
 }
@@ -281,7 +242,7 @@ static void mempoolite_link(mempoolite_t *handle, int i, int iLogsize) {
 	int x;
 	assert( i>=0 && i<handle->nBlock );
 	assert( iLogsize>=0 && iLogsize<=MEMPOOLITE_LOGMAX );
-	assert( (handle->aCtrl[i] & CTRL_LOGSIZE)==iLogsize );
+	assert( (handle->aCtrl[i] & MEMPOOLITE_CTRL_LOGSIZE)==iLogsize );
 
 	x = mempoolite_getlink(handle, i)->next = handle->aiFreelist[iLogsize];
 	mempoolite_getlink(handle, i)->prev = -1;
@@ -300,7 +261,7 @@ static void mempoolite_unlink(mempoolite_t *handle, int i, int iLogsize) {
 	int next, prev;
 	assert( i>=0 && i<handle->nBlock );
 	assert( iLogsize>=0 && iLogsize<=MEMPOOLITE_LOGMAX );
-	assert( (handle->aCtrl[i] & CTRL_LOGSIZE)==iLogsize );
+	assert( (handle->aCtrl[i] & MEMPOOLITE_CTRL_LOGSIZE)==iLogsize );
 
 	next = mempoolite_getlink(handle, i)->next;
 	prev = mempoolite_getlink(handle, i)->prev;
@@ -382,7 +343,7 @@ static void *mempoolite_malloc_unsafe(mempoolite_t *handle, int nByte) {
 
 		iBin--;
 		newSize = 1 << iBin;
-		handle->aCtrl[i+newSize] = CTRL_FREE | iBin;
+		handle->aCtrl[i+newSize] = MEMPOOLITE_CTRL_FREE | iBin;
 		mempoolite_link(handle, i+newSize, iBin);
 	}
 	handle->aCtrl[i] = iLogsize;
@@ -415,14 +376,14 @@ static void mempoolite_free_unsafe(mempoolite_t *handle, void *pOld) {
 	/* Check that the pointer pOld points to a valid, non-free block. */
 	assert( iBlock>=0 && iBlock<handle->nBlock );
 	assert( ((u8 *)pOld-handle->zPool)%handle->szAtom==0 );
-	assert( (handle->aCtrl[iBlock] & CTRL_FREE)==0 );
+	assert( (handle->aCtrl[iBlock] & MEMPOOLITE_CTRL_FREE)==0 );
 
-	iLogsize = handle->aCtrl[iBlock] & CTRL_LOGSIZE;
+	iLogsize = handle->aCtrl[iBlock] & MEMPOOLITE_CTRL_LOGSIZE;
 	size = 1<<iLogsize;
 	assert( iBlock+size-1<(u32)handle->nBlock );
 
-	handle->aCtrl[iBlock] |= CTRL_FREE;
-	handle->aCtrl[iBlock+size-1] |= CTRL_FREE;
+	handle->aCtrl[iBlock] |= MEMPOOLITE_CTRL_FREE;
+	handle->aCtrl[iBlock+size-1] |= MEMPOOLITE_CTRL_FREE;
 	assert( handle->currentCount>0 );
 	assert( handle->currentOut>=(size*handle->szAtom) );
 	handle->currentCount--;
@@ -430,7 +391,7 @@ static void mempoolite_free_unsafe(mempoolite_t *handle, void *pOld) {
 	assert( handle->currentOut>0 || handle->currentCount==0 );
 	assert( handle->currentCount>0 || handle->currentOut==0 );
 
-	handle->aCtrl[iBlock] = CTRL_FREE | iLogsize;
+	handle->aCtrl[iBlock] = MEMPOOLITE_CTRL_FREE | iLogsize;
 	while( iLogsize<MEMPOOLITE_LOGMAX ) {
 		int iBuddy;
 		if( (iBlock>>iLogsize) & 1 ) {
@@ -440,15 +401,15 @@ static void mempoolite_free_unsafe(mempoolite_t *handle, void *pOld) {
 		}
 		assert( iBuddy>=0 );
 		if( (iBuddy+(1<<iLogsize))>handle->nBlock ) break;
-		if( handle->aCtrl[iBuddy]!=(CTRL_FREE | iLogsize) ) break;
+		if( handle->aCtrl[iBuddy]!=(MEMPOOLITE_CTRL_FREE | iLogsize) ) break;
 		mempoolite_unlink(handle, iBuddy, iLogsize);
 		iLogsize++;
 		if( iBuddy<iBlock ) {
-			handle->aCtrl[iBuddy] = CTRL_FREE | iLogsize;
+			handle->aCtrl[iBuddy] = MEMPOOLITE_CTRL_FREE | iLogsize;
 			handle->aCtrl[iBlock] = 0;
 			iBlock = iBuddy;
 		} else {
-			handle->aCtrl[iBlock] = CTRL_FREE | iLogsize;
+			handle->aCtrl[iBlock] = MEMPOOLITE_CTRL_FREE | iLogsize;
 			handle->aCtrl[iBuddy] = 0;
 		}
 		size *= 2;
