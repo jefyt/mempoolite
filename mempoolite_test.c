@@ -69,8 +69,8 @@ int main()
 
 		printf("Multi-threaded test...\n");
 		pool_lock.arg = (void *) &mutex;
-		pool_lock.acquire = (int (*)(void *arg))pthread_mutex_lock;
-		pool_lock.release = (int (*)(void *arg))pthread_mutex_unlock;
+		pool_lock.acquire = (int (*)(void *))pthread_mutex_lock;
+		pool_lock.release = (int (*)(void *))pthread_mutex_unlock;
 		mempoolite_init(&pool, buffer, buffer_size, min_alloc, &pool_lock);
 		threads = (pthread_t *) malloc(sizeof (*threads) * num_threads);
 		threads_param = (multithreaded_param_t *) malloc(sizeof (*threads_param) * num_threads);

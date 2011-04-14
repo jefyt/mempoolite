@@ -212,7 +212,7 @@ int mempoolite_roundup(mempoolite_t *handle, const int n)
 	int iFullSz;
 
 	/* Check the parameters */
-	if ((NULL == handle) || (n > 0x40000000)) {
+	if ((NULL == handle) || (n > MEMPOOLITE_MAX_ALLOC_SIZE)) {
 		return 0;
 	}
 
@@ -347,7 +347,7 @@ static void *mempoolite_malloc_unsafe(mempoolite_t *handle, const int nByte)
 	/* Abort if the requested allocation size is larger than the largest
 	 ** power of two that we can represent using 32-bit signed integers.
 	 */
-	if (nByte > 0x40000000) {
+	if (nByte > MEMPOOLITE_MAX_ALLOC_SIZE) {
 		return NULL;
 	}
 
