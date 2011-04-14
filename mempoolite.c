@@ -1,46 +1,44 @@
-/*
- ** 2007 October 14
- **
- ** The author disclaims copyright to this source code.  In place of
- ** a legal notice, here is a blessing:
- **
- **    May you do good and not evil.
- **    May you find forgiveness for yourself and forgive others.
- **    May you share freely, never taking more than you give.
- **
- *************************************************************************
- ** This file contains the C functions that implement a memory
- ** allocation subsystem based on SQLite's memsys5 memory subsystem.
- **
- ** This version of the memory allocation subsystem omits all
- ** use of malloc(). The application gives a block of memory
- ** from which allocations are made and returned by the mempoolite_malloc()
- ** and mempoolite_realloc() implementations.
- **
- ** This version of the memory allocation subsystem is included
- ** in the build only if MEMPOOLITE_ENABLED is set to 1.
- **
- ** This memory allocator uses the following algorithm:
- **
- **   1.  All memory allocations sizes are rounded up to a power of 2.
- **
- **   2.  If two adjacent free blocks are the halves of a larger block,
- **       then the two blocks are coalesed into the single larger block.
- **
- **   3.  New memory is allocated from the first available free block.
- **
- ** This algorithm is described in: J. M. Robson. "Bounds for Some Functions
- ** Concerning Dynamic Storage Allocation". Journal of the Association for
- ** Computing Machinery, Volume 21, Number 8, July 1974, pages 491-499.
- **
- ** Let n be the size of the largest allocation divided by the minimum
- ** allocation size (after rounding all sizes up to a power of 2.)  Let M
- ** be the maximum amount of memory ever outstanding at one time.  Let
- ** N be the total amount of memory available for allocation.  Robson
- ** proved that this memory allocator will never breakdown due to
- ** fragmentation as long as the following constraint holds:
- **
- **      N >=  M*(1 + log2(n)/2) - n + 1
+/**
+ * The author disclaims copyright to this source code.  In place of
+ * a legal notice, here is a blessing:
+ *
+ *    May you do good and not evil.
+ *    May you find forgiveness for yourself and forgive others.
+ *    May you share freely, never taking more than you give.
+ *
+ * This file contains the APIs that implement a memory allocation subsystem
+ * based on SQLite's memsys5 memory subsystem. Refer to
+ * http://www.sqlite.org/malloc.html for more info.
+ *
+ * This version of the memory allocation subsystem omits all
+ * use of malloc(). The application gives a block of memory
+ * from which allocations are made and returned by the mempoolite_malloc()
+ * and mempoolite_realloc() implementations.
+ *
+ * This version of the memory allocation subsystem is included
+ * in the build only if MEMPOOLITE_ENABLED is set to 1.
+ *
+ * This memory allocator uses the following algorithm:
+ *
+ *   1.  All memory allocations sizes are rounded up to a power of 2.
+ *
+ *   2.  If two adjacent free blocks are the halves of a larger block,
+ *       then the two blocks are coalesed into the single larger block.
+ *
+ *   3.  New memory is allocated from the first available free block.
+ *
+ * This algorithm is described in: J. M. Robson. "Bounds for Some Functions
+ * Concerning Dynamic Storage Allocation". Journal of the Association for
+ * Computing Machinery, Volume 21, Number 8, July 1974, pages 491-499.
+ *
+ * Let n be the size of the largest allocation divided by the minimum
+ * allocation size (after rounding all sizes up to a power of 2.)  Let M
+ * be the maximum amount of memory ever outstanding at one time.  Let
+ * N be the total amount of memory available for allocation.  Robson
+ * proved that this memory allocator will never breakdown due to
+ * fragmentation as long as the following constraint holds:
+ *
+ *      N >=  M*(1 + log2(n)/2) - n + 1
  */
 #include "mempoolite.h"
 
@@ -80,20 +78,28 @@ struct mempoolite_link
  ** Assuming mempoolite_t.zPool is divided up into an array of mempoolite_link_t
  ** structures, return a pointer to the idx-th such lik.
  */
-#define mempoolite_getlink(handle, idx) ((mempoolite_link_t *)(&handle->zPool[(idx)*handle->szAtom]))
+#define mempoolite_getlink(handle, idx) ((mempoolite_link_t *)	\
+		(&handle->zPool[(idx) * handle->szAtom]))
 
-#define mempoolite_enter(handle)			if((handle != NULL) && ((handle)->lock.acquire != NULL))	\
+#define mempoolite_enter(handle)	if((handle != NULL) &&		\
+		((handle)->lock.acquire != NULL))					\
 		{ (handle)->lock.acquire((handle)->lock.arg); }
-#define mempoolite_leave(handle)			if((handle != NULL) && ((handle)->lock.release != NULL))	\
+#define mempoolite_leave(handle)	if((handle != NULL) &&		\
+		((handle)->lock.release != NULL))					\
 		{ (handle)->lock.release((handle)->lock.arg); }
 
 MEMPOOLITE_PRIVATE_API int mempoolite_logarithm(const int iValue);
 MEMPOOLITE_PRIVATE_API int mempoolite_size(const mempoolite_t *handle, const void *p);
-MEMPOOLITE_PRIVATE_API void mempoolite_link(mempoolite_t *handle, const int i, const int iLogsize);
-MEMPOOLITE_PRIVATE_API void mempoolite_unlink(mempoolite_t *handle, const int i, const int iLogsize);
-MEMPOOLITE_PRIVATE_API int mempoolite_unlink_first(mempoolite_t *handle, const int iLogsize);
-MEMPOOLITE_PRIVATE_API void *mempoolite_malloc_unsafe(mempoolite_t *handle, const int nByte);
-MEMPOOLITE_PRIVATE_API void mempoolite_free_unsafe(mempoolite_t *handle, const void *pOld);
+MEMPOOLITE_PRIVATE_API void mempoolite_link(mempoolite_t *handle, const int i,
+									  const int iLogsize);
+MEMPOOLITE_PRIVATE_API void mempoolite_unlink(mempoolite_t *handle, const int i,
+										const int iLogsize);
+MEMPOOLITE_PRIVATE_API int mempoolite_unlink_first(mempoolite_t *handle,
+											 const int iLogsize);
+MEMPOOLITE_PRIVATE_API void *mempoolite_malloc_unsafe(mempoolite_t *handle,
+												const int nByte);
+MEMPOOLITE_PRIVATE_API void mempoolite_free_unsafe(mempoolite_t *handle,
+											 const void *pOld);
 
 MEMPOOLITE_API int mempoolite_init(mempoolite_t *handle, const void *buf,
 							 const int buf_size, const int min_alloc,
@@ -106,7 +112,8 @@ MEMPOOLITE_API int mempoolite_init(mempoolite_t *handle, const void *buf,
 	int iOffset; /* An offset into handle->aCtrl[] */
 
 	/* Check the parameters */
-	if ((NULL == handle) || (NULL == buf) || (buf_size <= 0) || (min_alloc <= 0)) {
+	if ((NULL == handle) || (NULL == buf) || (buf_size <= 0) ||
+		(min_alloc <= 0)) {
 		return MEMPOOLITE_ERR_INVPAR;
 	}
 
@@ -251,7 +258,8 @@ MEMPOOLITE_PRIVATE_API int mempoolite_size(const mempoolite_t *handle, const voi
 	if (p) {
 		int i = ((uint8_t *) p - handle->zPool) / handle->szAtom;
 		assert(i >= 0 && i < handle->nBlock);
-		iSize = handle->szAtom * (1 << (handle->aCtrl[i] & MEMPOOLITE_CTRL_LOGSIZE));
+		iSize = handle->szAtom *
+				(1 << (handle->aCtrl[i] & MEMPOOLITE_CTRL_LOGSIZE));
 	}
 	return iSize;
 }
@@ -260,7 +268,8 @@ MEMPOOLITE_PRIVATE_API int mempoolite_size(const mempoolite_t *handle, const voi
  ** Link the chunk at handle->aPool[i] so that is on the iLogsize
  ** free list.
  */
-MEMPOOLITE_PRIVATE_API void mempoolite_link(mempoolite_t *handle, const int i, const int iLogsize)
+MEMPOOLITE_PRIVATE_API void mempoolite_link(mempoolite_t *handle, const int i,
+									  const int iLogsize)
 {
 	int x;
 	assert(i >= 0 && i < handle->nBlock);
@@ -280,7 +289,8 @@ MEMPOOLITE_PRIVATE_API void mempoolite_link(mempoolite_t *handle, const int i, c
  ** Unlink the chunk at handle->aPool[i] from list it is currently
  ** on.  It should be found on handle->aiFreelist[iLogsize].
  */
-MEMPOOLITE_PRIVATE_API void mempoolite_unlink(mempoolite_t *handle, const int i, const int iLogsize)
+MEMPOOLITE_PRIVATE_API void mempoolite_unlink(mempoolite_t *handle, const int i,
+										const int iLogsize)
 {
 	int next, prev;
 	assert(i >= 0 && i < handle->nBlock);
@@ -304,7 +314,8 @@ MEMPOOLITE_PRIVATE_API void mempoolite_unlink(mempoolite_t *handle, const int i,
  ** Find the first entry on the freelist iLogsize.  Unlink that
  ** entry and return its index.
  */
-MEMPOOLITE_PRIVATE_API int mempoolite_unlink_first(mempoolite_t *handle, const int iLogsize)
+MEMPOOLITE_PRIVATE_API int mempoolite_unlink_first(mempoolite_t *handle,
+											 const int iLogsize)
 {
 	int i;
 	int iFirst;
@@ -330,7 +341,8 @@ MEMPOOLITE_PRIVATE_API int mempoolite_unlink_first(mempoolite_t *handle, const i
  ** routine so there is never any chance that two or more
  ** threads can be in this routine at the same time.
  */
-MEMPOOLITE_PRIVATE_API void *mempoolite_malloc_unsafe(mempoolite_t *handle, const int nByte)
+MEMPOOLITE_PRIVATE_API void *mempoolite_malloc_unsafe(mempoolite_t *handle,
+												const int nByte)
 {
 	int i; /* Index of a handle->aPool[] slot */
 	int iBin; /* Index into handle->aiFreelist[] */
@@ -354,14 +366,16 @@ MEMPOOLITE_PRIVATE_API void *mempoolite_malloc_unsafe(mempoolite_t *handle, cons
 	}
 
 	/* Round nByte up to the next valid power of two */
-	for (iFullSz = handle->szAtom, iLogsize = 0; iFullSz < nByte; iFullSz *= 2, iLogsize++) {
+	for (iFullSz = handle->szAtom, iLogsize = 0; iFullSz < nByte; iFullSz *= 2,
+		iLogsize++) {
 	}
 
 	/* Make sure handle->aiFreelist[iLogsize] contains at least one free
 	 ** block.  If not, then split a block of the next larger power of
 	 ** two in order to create a new free block of size iLogsize.
 	 */
-	for (iBin = iLogsize; handle->aiFreelist[iBin] < 0 && iBin <= MEMPOOLITE_LOGMAX; iBin++) {
+	for (iBin = iLogsize; handle->aiFreelist[iBin] < 0 && iBin <= MEMPOOLITE_LOGMAX;
+		iBin++) {
 	}
 	if (iBin > MEMPOOLITE_LOGMAX) {
 		return NULL;
@@ -383,8 +397,12 @@ MEMPOOLITE_PRIVATE_API void *mempoolite_malloc_unsafe(mempoolite_t *handle, cons
 	handle->totalExcess += iFullSz - nByte;
 	handle->currentCount++;
 	handle->currentOut += iFullSz;
-	if (handle->maxCount < handle->currentCount) handle->maxCount = handle->currentCount;
-	if (handle->maxOut < handle->currentOut) handle->maxOut = handle->currentOut;
+	if (handle->maxCount < handle->currentCount) {
+		handle->maxCount = handle->currentCount;
+	}
+	if (handle->maxOut < handle->currentOut) {
+		handle->maxOut = handle->currentOut;
+	}
 
 	/* Return a pointer to the allocated memory. */
 	return (void*) &handle->zPool[i * handle->szAtom];
@@ -393,7 +411,8 @@ MEMPOOLITE_PRIVATE_API void *mempoolite_malloc_unsafe(mempoolite_t *handle, cons
 /*
  ** Free an outstanding memory allocation.
  */
-MEMPOOLITE_PRIVATE_API void mempoolite_free_unsafe(mempoolite_t *handle, const void *pOld)
+MEMPOOLITE_PRIVATE_API void mempoolite_free_unsafe(mempoolite_t *handle,
+											 const void *pOld)
 {
 	uint32_t size, iLogsize;
 	int iBlock;

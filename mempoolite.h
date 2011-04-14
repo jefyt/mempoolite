@@ -1,3 +1,45 @@
+/**
+ * The author disclaims copyright to this source code.  In place of
+ * a legal notice, here is a blessing:
+ *
+ *    May you do good and not evil.
+ *    May you find forgiveness for yourself and forgive others.
+ *    May you share freely, never taking more than you give.
+ *
+ * This file contains the APIs that implement a memory allocation subsystem
+ * based on SQLite's memsys5 memory subsystem. Refer to
+ * http://www.sqlite.org/malloc.html for more info.
+ *
+ * This version of the memory allocation subsystem omits all
+ * use of malloc(). The application gives a block of memory
+ * from which allocations are made and returned by the mempoolite_malloc()
+ * and mempoolite_realloc() implementations.
+ *
+ * This version of the memory allocation subsystem is included
+ * in the build only if MEMPOOLITE_ENABLED is set to 1.
+ *
+ * This memory allocator uses the following algorithm:
+ *
+ *   1.  All memory allocations sizes are rounded up to a power of 2.
+ *
+ *   2.  If two adjacent free blocks are the halves of a larger block,
+ *       then the two blocks are coalesed into the single larger block.
+ *
+ *   3.  New memory is allocated from the first available free block.
+ *
+ * This algorithm is described in: J. M. Robson. "Bounds for Some Functions
+ * Concerning Dynamic Storage Allocation". Journal of the Association for
+ * Computing Machinery, Volume 21, Number 8, July 1974, pages 491-499.
+ *
+ * Let n be the size of the largest allocation divided by the minimum
+ * allocation size (after rounding all sizes up to a power of 2.)  Let M
+ * be the maximum amount of memory ever outstanding at one time.  Let
+ * N be the total amount of memory available for allocation.  Robson
+ * proved that this memory allocator will never breakdown due to
+ * fragmentation as long as the following constraint holds:
+ *
+ *      N >=  M*(1 + log2(n)/2) - n + 1
+ */
 #ifndef MEMPOOLITE_H
 #define MEMPOOLITE_H
 
