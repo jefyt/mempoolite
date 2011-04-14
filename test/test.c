@@ -8,19 +8,23 @@
 typedef struct multithreaded_param {
 	size_t index;
 	mempoolite_t *pool;
-	size_t alloc_size;
+	int req_size;
 } multithreaded_param_t;
 
 void *
 multithreaded_main(void *args) {
 	multithreaded_param_t *param;
 	void *buffer;
+	int round_size;
 
 	param = (multithreaded_param_t *) args;
 
-	while ((buffer = mempoolite_malloc(param->pool, param->alloc_size)) != NULL) {
-		printf("index: %u address: %p size: %u\n", param->index, buffer,
-			param->alloc_size);
+	round_size = mempoolite_roundup(param->pool, param->req_size);
+	printf("index: %u requested size: %d round-up size: %d\n", param->index,
+		param->req_size, round_size);
+	while ((buffer = mempoolite_malloc(param->pool, param->req_size)) != NULL) {
+		printf("index: %u address: %p size: %d\n", param->index, buffer,
+			param->req_size);
 		/* Sleep for 1 millisecond to give other threads to run */
 		usleep(1000);
 	}
@@ -79,7 +83,7 @@ main() {
 		/* Run all the threads */
 		for (alloc_counter = 0; alloc_counter < num_threads; alloc_counter++) {
 			threads_param[alloc_counter].index = alloc_counter;
-			threads_param[alloc_counter].alloc_size = min_alloc;
+			threads_param[alloc_counter].req_size = min_alloc;
 			threads_param[alloc_counter].pool = &mempool;
 			pthread_create(&threads[alloc_counter], NULL, multithreaded_main, &threads_param[alloc_counter]);
 		}
