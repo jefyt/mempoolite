@@ -80,10 +80,10 @@ struct mempoolite_link {
 */
 #define mempoolite_getlink(handle, idx) ((mempoolite_link_t *)(&handle->zPool[(idx)*handle->szAtom]))
 
-#define mempoolite_enter(handle)			if((handle != NULL) && ((handle)->mutex.lock != NULL))	\
-		{ (handle)->mutex.acquire((handle)->mutex.lock); }
-#define mempoolite_leave(handle)			if((handle != NULL) && ((handle)->mutex.lock != NULL))	\
-		{ (handle)->mutex.release((handle)->mutex.lock); }
+#define mempoolite_enter(handle)			if((handle != NULL) && ((handle)->lock.acquire != NULL))	\
+		{ (handle)->lock.acquire((handle)->lock.arg); }
+#define mempoolite_leave(handle)			if((handle != NULL) && ((handle)->lock.release != NULL))	\
+		{ (handle)->lock.release((handle)->lock.arg); }
 
 static int mempoolite_logarithm(const int iValue);
 static int mempoolite_size(const mempoolite_t *handle, const void *p);
@@ -93,7 +93,8 @@ static int mempoolite_unlink_first(mempoolite_t *handle, const int iLogsize);
 static void *mempoolite_malloc_unsafe(mempoolite_t *handle, const int nByte);
 static void mempoolite_free_unsafe(mempoolite_t *handle, const void *pOld);
 
-int mempoolite_init(mempoolite_t *handle, const void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex)
+int mempoolite_init(mempoolite_t *handle, const void *buf, const int buf_size,
+				 const int min_alloc, const mempoolite_lock_t *lock)
 {
 	int ii;            /* Loop counter */
 	int nByte;         /* Number of bytes of memory available to this allocator */
@@ -106,12 +107,12 @@ int mempoolite_init(mempoolite_t *handle, const void *buf, const int buf_size, c
 		return MEMPOOLITE_ERR_INVPAR;
 	}
 
-	/* Copy the mutex if it is not NULL */
-	if(mutex != NULL) {
-		memcpy(&handle->mutex, mutex, sizeof(handle->mutex));
+	/* Copy the lock if it is not NULL */
+	if(lock != NULL) {
+		memcpy(&handle->lock, lock, sizeof(handle->lock));
 	}
 	else {
-		handle->mutex.lock = NULL;
+		memset(&handle->lock, 0, sizeof(handle->lock));
 	}
 
 	/* The size of a mempoolite_link_t object must be a power of two.  Verify that
@@ -311,7 +312,7 @@ static int mempoolite_unlink_first(mempoolite_t *handle, const int iLogsize) {
 **
 ** The caller guarantees that nByte positive.
 **
-** The caller has obtained a mutex prior to invoking this
+** The caller has obtained a lock prior to invoking this
 ** routine so there is never any chance that two or more
 ** threads can be in this routine at the same time.
 */

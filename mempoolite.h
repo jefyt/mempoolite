@@ -16,12 +16,12 @@
 */
 #define MEMPOOLITE_LOGMAX 30
 
-typedef struct mempoolite_mutex
+typedef struct mempoolite_lock
 {
-	void *lock;
-	int (*acquire)(void *lock);
-	int (*release)(void *lock);
-} mempoolite_mutex_t;
+	void *arg;
+	int (*acquire)(void *arg);
+	int (*release)(void *arg);
+} mempoolite_lock_t;
 
 typedef struct mempoolite {
 	/*
@@ -32,9 +32,9 @@ typedef struct mempoolite {
 	uint8_t *zPool;  /* Memory available to be allocated */
 
 	/*
-	** Mutex to control access to the memory allocation subsystem.
+	** Lock to control access to the memory allocation subsystem.
 	*/
-	mempoolite_mutex_t mutex;
+	mempoolite_lock_t lock;
 
 	/*
 	** Performance statistics
@@ -65,10 +65,11 @@ typedef struct mempoolite {
 /*
 ** Initialize the memory allocator.
 **
-** This routine is not threadsafe.  The caller must be holding a mutex
+** This routine is not threadsafe.  The caller must be holding a lock
 ** to prevent multiple threads from entering at the same time.
 */
-int mempoolite_init(mempoolite_t *handle, const void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex);
+int mempoolite_init(mempoolite_t *handle, const void *buf, const int buf_size,
+				 const int min_alloc, const mempoolite_lock_t *lock);
 
 /*
 ** Allocate nBytes of memory
