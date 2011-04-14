@@ -36,7 +36,11 @@ int main()
 	mempoolite_t pool;
 	pthread_t *threads;
 	multithreaded_param_t *threads_param;
+	mempoolite_lock_t pool_lock;
+	pthread_mutex_t mutex;
 	int test_again;
+
+	pthread_mutex_init(&mutex, NULL);
 
 	/* Get the buffer and size */
 	do {
@@ -61,7 +65,10 @@ int main()
 		}
 
 		printf("Multi-threaded test...\n");
-		mempoolite_init(&pool, buffer, buffer_size, min_alloc, NULL);
+		pool_lock.arg = (void *)&mutex;
+		pool_lock.acquire = (int (*)(void *arg))pthread_mutex_lock;
+		pool_lock.release = (int (*)(void *arg))pthread_mutex_unlock;
+		mempoolite_init(&pool, buffer, buffer_size, min_alloc, &pool_lock);
 		threads = (pthread_t *)malloc(sizeof(*threads) * num_threads);
 		threads_param = (multithreaded_param_t *)malloc(sizeof(*threads_param) * num_threads);
 		/* Run all the threads */
@@ -83,5 +90,8 @@ int main()
 		printf("Test again? <0:false, non-zero:true>: ");
 		scanf("%d", &test_again);
 	} while(test_again);
+
+	pthread_mutex_destroy(&mutex);
+
 	return 0;
 }
