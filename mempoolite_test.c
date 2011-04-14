@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "mempoolite.h"
 
@@ -20,6 +21,8 @@ void *multithreaded_main(void *args)
 
 	while ((buffer = mempoolite_malloc(param->pool, param->min_alloc)) != NULL) {
 		printf("index: %u malloc = %p\n", param->index, buffer);
+		/* Sleep for 1 millisecond to give other threads to run */
+		usleep(1000);
 	}
 
 	return NULL;
