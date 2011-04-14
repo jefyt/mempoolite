@@ -85,12 +85,12 @@ struct mempoolite_link {
 #define mempoolite_leave(handle)			if((handle != NULL) && ((handle)->mutex.mutex != NULL))	\
 		{ (handle)->mutex.unlock((handle)->mutex.mutex); }
 
-static int mempoolite_logarithm(int iValue);
+static int mempoolite_logarithm(const int iValue);
 static int mempoolite_size(const mempoolite_t *handle, const void *p);
-static void mempoolite_link(mempoolite_t *handle, int i, int iLogsize);
-static void mempoolite_unlink(mempoolite_t *handle, int i, int iLogsize);
-static int mempoolite_unlink_first(mempoolite_t *handle, int iLogsize);
-static void *mempoolite_malloc_unsafe(mempoolite_t *handle, int nByte);
+static void mempoolite_link(mempoolite_t *handle, const int i, const int iLogsize);
+static void mempoolite_unlink(mempoolite_t *handle, const int i, const int iLogsize);
+static int mempoolite_unlink_first(mempoolite_t *handle, const int iLogsize);
+static void *mempoolite_malloc_unsafe(mempoolite_t *handle, const int nByte);
 static void mempoolite_free_unsafe(mempoolite_t *handle, const void *pOld);
 
 int mempoolite_construct(mempoolite_t *handle, const void *buf, const int buf_size, const int min_alloc, const mempoolite_mutex_t *mutex)
@@ -230,7 +230,7 @@ int mempoolite_roundup(mempoolite_t *handle, const int n) {
 **             mempoolite_logarithm(8) -> 3
 **             mempoolite_logarithm(9) -> 4
 */
-static int mempoolite_logarithm(int iValue) {
+static int mempoolite_logarithm(const int iValue) {
 	int iLog;
 	for(iLog=0; (1<<iLog)<iValue; iLog++);
 	return iLog;
@@ -255,7 +255,7 @@ static int mempoolite_size(const mempoolite_t *handle, const void *p) {
 ** Link the chunk at handle->aPool[i] so that is on the iLogsize
 ** free list.
 */
-static void mempoolite_link(mempoolite_t *handle, int i, int iLogsize) {
+static void mempoolite_link(mempoolite_t *handle, const int i, const int iLogsize) {
 	int x;
 	assert( i>=0 && i<handle->nBlock );
 	assert( iLogsize>=0 && iLogsize<=MEMPOOLITE_LOGMAX );
@@ -274,7 +274,7 @@ static void mempoolite_link(mempoolite_t *handle, int i, int iLogsize) {
 ** Unlink the chunk at handle->aPool[i] from list it is currently
 ** on.  It should be found on handle->aiFreelist[iLogsize].
 */
-static void mempoolite_unlink(mempoolite_t *handle, int i, int iLogsize) {
+static void mempoolite_unlink(mempoolite_t *handle, const int i, const int iLogsize) {
 	int next, prev;
 	assert( i>=0 && i<handle->nBlock );
 	assert( iLogsize>=0 && iLogsize<=MEMPOOLITE_LOGMAX );
@@ -296,7 +296,7 @@ static void mempoolite_unlink(mempoolite_t *handle, int i, int iLogsize) {
 ** Find the first entry on the freelist iLogsize.  Unlink that
 ** entry and return its index.
 */
-static int mempoolite_unlink_first(mempoolite_t *handle, int iLogsize) {
+static int mempoolite_unlink_first(mempoolite_t *handle, const int iLogsize) {
 	int i;
 	int iFirst;
 
@@ -321,7 +321,7 @@ static int mempoolite_unlink_first(mempoolite_t *handle, int iLogsize) {
 ** routine so there is never any chance that two or more
 ** threads can be in this routine at the same time.
 */
-static void *mempoolite_malloc_unsafe(mempoolite_t *handle, int nByte) {
+static void *mempoolite_malloc_unsafe(mempoolite_t *handle, const int nByte) {
 	int i;           /* Index of a handle->aPool[] slot */
 	int iBin;        /* Index into handle->aiFreelist[] */
 	int iFullSz;     /* Size of allocation rounded up to power of 2 */
