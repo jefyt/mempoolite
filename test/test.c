@@ -19,7 +19,8 @@ multithreaded_main(void *args) {
 	param = (multithreaded_param_t *) args;
 
 	while ((buffer = mempoolite_malloc(param->pool, param->alloc_size)) != NULL) {
-		printf("index: %u malloc = %p\n", param->index, buffer);
+		printf("index: %u address: %p size: %u\n", param->index, buffer,
+			param->alloc_size);
 		/* Sleep for 1 millisecond to give other threads to run */
 		usleep(1000);
 	}
