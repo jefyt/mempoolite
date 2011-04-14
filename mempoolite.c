@@ -1,48 +1,7 @@
-/**
- * The author disclaims copyright to this source code.  In place of
- * a legal notice, here is a blessing:
- *
- *    May you do good and not evil.
- *    May you find forgiveness for yourself and forgive others.
- *    May you share freely, never taking more than you give.
- *
- * This file contains the APIs that implement a memory allocation subsystem
- * based on SQLite's memsys5 memory subsystem. Refer to
- * http://www.sqlite.org/malloc.html for more info.
- *
- * This version of the memory allocation subsystem omits all
- * use of malloc(). The application gives a block of memory
- * from which allocations are made and returned by the mempoolite_malloc()
- * and mempoolite_realloc() implementations.
- *
- * This version of the memory allocation subsystem is included
- * in the build only if MEMPOOLITE_ENABLED is set to 1.
- *
- * This memory allocator uses the following algorithm:
- *
- *   1.  All memory allocations sizes are rounded up to a power of 2.
- *
- *   2.  If two adjacent free blocks are the halves of a larger block,
- *       then the two blocks are coalesed into the single larger block.
- *
- *   3.  New memory is allocated from the first available free block.
- *
- * This algorithm is described in: J. M. Robson. "Bounds for Some Functions
- * Concerning Dynamic Storage Allocation". Journal of the Association for
- * Computing Machinery, Volume 21, Number 8, July 1974, pages 491-499.
- *
- * Let n be the size of the largest allocation divided by the minimum
- * allocation size (after rounding all sizes up to a power of 2.)  Let M
- * be the maximum amount of memory ever outstanding at one time.  Let
- * N be the total amount of memory available for allocation.  Robson
- * proved that this memory allocator will never breakdown due to
- * fragmentation as long as the following constraint holds:
- *
- *      N >=  M*(1 + log2(n)/2) - n + 1
- */
 #include "mempoolite.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
@@ -117,12 +76,12 @@ MEMPOOLITE_API int mempoolite_init(mempoolite_t *handle, const void *buf,
 		return MEMPOOLITE_ERR_INVPAR;
 	}
 
+	/* Initialize the mempoolite_t object */
+	memset(handle, 0, sizeof (*handle));
+
 	/* Copy the lock if it is not NULL */
 	if (lock != NULL) {
 		memcpy(&handle->lock, lock, sizeof (handle->lock));
-	}
-	else {
-		memset(&handle->lock, 0, sizeof (handle->lock));
 	}
 
 	/* The size of a mempoolite_link_t object must be a power of two.  Verify that
@@ -228,6 +187,45 @@ MEMPOOLITE_API int mempoolite_roundup(mempoolite_t *handle, const int n)
 	for (iFullSz = handle->szAtom; iFullSz < n; iFullSz *= 2);
 
 	return iFullSz;
+}
+
+MEMPOOLITE_API void mempoolite_print_stats(const mempoolite_t * const handle,
+								  const mempoolite_putsfunc_t putsfunc)
+{
+	if ((handle != NULL) && (putsfunc != NULL)) {
+		char zStats[256];
+		snprintf(zStats, sizeof (zStats), "Total number of calls to malloc: %u",
+				(unsigned) handle->nAlloc);
+		putsfunc(zStats);
+
+		snprintf(zStats, sizeof (zStats), "Total of all malloc calls - includes "
+				"internal fragmentation: %u", (unsigned) handle->totalAlloc);
+		putsfunc(zStats);
+
+		snprintf(zStats, sizeof (zStats), "Total internal fragmentation: %u",
+				(unsigned) handle->totalExcess);
+		putsfunc(zStats);
+
+		snprintf(zStats, sizeof (zStats), "Current checkout, including internal "
+				"fragmentation: %u", handle->currentOut);
+		putsfunc(zStats);
+
+		snprintf(zStats, sizeof (zStats), "Current number of distinct checkouts: %u",
+				handle->currentCount);
+		putsfunc(zStats);
+
+		snprintf(zStats, sizeof (zStats), "Maximum instantaneous currentOut: %u",
+				handle->maxOut);
+		putsfunc(zStats);
+
+		snprintf(zStats, sizeof (zStats), "Maximum instantaneous currentCount: %u",
+				handle->maxCount);
+		putsfunc(zStats);
+
+		snprintf(zStats, sizeof (zStats), "Largest allocation (exclusive of "
+				"internal frag): %u", handle->maxRequest);
+		putsfunc(zStats);
+	}
 }
 
 /*

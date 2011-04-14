@@ -128,6 +128,13 @@ typedef struct mempoolite
 } mempoolite_t;
 
 /**
+ * @brief Print string function pointer to be passed to @ref mempoolite_print_stats
+ *        function. This must be same as stdio's puts function mechanism which
+ *        automatically appends a new line character in every call.
+ */
+typedef int (*mempoolite_putsfunc_t)(const char* stats);
+
+/**
  * @brief Initialize the memory pool object.
  * @param[in,out] handle Pointer to a @ref mempoolite_t object which is allocated
  *                       by the caller either from stack, heap, or application's
@@ -195,5 +202,18 @@ MEMPOOLITE_API void *mempoolite_realloc(mempoolite_t *handle, const void *pPrior
  */
 MEMPOOLITE_API int mempoolite_roundup(mempoolite_t *handle, const int n);
 
-#endif /* #ifndef MEMPOOLITE_H */
+/**
+ * @brief Print the statistics of the memory pool object
+ * @param[in,out] handle Pointer to an initialized @ref mempoolite_t object
+ * @param[in] logfunc Non-NULL log function of the caller. Refer to
+ *                    @ref mempoolite_logfunc_t for the prototype of this function.
+ */
+MEMPOOLITE_API void mempoolite_print_stats(const mempoolite_t * const handle,
+								  const mempoolite_putsfunc_t logfunc);
 
+/**
+ * @brief Macro to return the number of times mempoolite_malloc() has been called.
+ */
+#define mempoolite_alloc_count(handle)	(((handle) != NULL)? (handle)->nAlloc : 0)
+
+#endif /* #ifndef MEMPOOLITE_H */
