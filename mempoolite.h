@@ -5,7 +5,6 @@
 
 #define MEMPOOLITE_OK			0
 #define MEMPOOLITE_ERR_INVPAR	-1
-#define MEMPOOLITE_ERR_NOMEM	-2
 
 #define MEMPOOLITE_UNUSED_PARAM(param)	(void)(param)
 
