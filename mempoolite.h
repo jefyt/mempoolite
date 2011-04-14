@@ -74,10 +74,6 @@
  * @brief An indicator that a function is a public API
  */
 #define MEMPOOLITE_API
-/**
- * @brief An indicator that a function is a private API
- */
-#define MEMPOOLITE_PRIVATE_API	static
 
 /**
  * @brief Lock object to be used in a threadsafe memory pool

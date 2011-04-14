@@ -47,17 +47,17 @@ struct mempoolite_link
 		((handle)->lock.release != NULL))					\
 		{ (handle)->lock.release((handle)->lock.arg); }
 
-MEMPOOLITE_PRIVATE_API int mempoolite_logarithm(const int iValue);
-MEMPOOLITE_PRIVATE_API int mempoolite_size(const mempoolite_t *handle, const void *p);
-MEMPOOLITE_PRIVATE_API void mempoolite_link(mempoolite_t *handle, const int i,
+static int mempoolite_logarithm(const int iValue);
+static int mempoolite_size(const mempoolite_t *handle, const void *p);
+static void mempoolite_link(mempoolite_t *handle, const int i,
 									  const int iLogsize);
-MEMPOOLITE_PRIVATE_API void mempoolite_unlink(mempoolite_t *handle, const int i,
+static void mempoolite_unlink(mempoolite_t *handle, const int i,
 										const int iLogsize);
-MEMPOOLITE_PRIVATE_API int mempoolite_unlink_first(mempoolite_t *handle,
+static int mempoolite_unlink_first(mempoolite_t *handle,
 											 const int iLogsize);
-MEMPOOLITE_PRIVATE_API void *mempoolite_malloc_unsafe(mempoolite_t *handle,
+static void *mempoolite_malloc_unsafe(mempoolite_t *handle,
 												const int nByte);
-MEMPOOLITE_PRIVATE_API void mempoolite_free_unsafe(mempoolite_t *handle,
+static void mempoolite_free_unsafe(mempoolite_t *handle,
 											 const void *pOld);
 
 MEMPOOLITE_API int mempoolite_init(mempoolite_t *handle, const void *buf,
@@ -238,7 +238,7 @@ MEMPOOLITE_API void mempoolite_print_stats(const mempoolite_t * const handle,
  **             mempoolite_logarithm(8) -> 3
  **             mempoolite_logarithm(9) -> 4
  */
-MEMPOOLITE_PRIVATE_API int mempoolite_logarithm(const int iValue)
+static int mempoolite_logarithm(const int iValue)
 {
 	int iLog;
 	for (iLog = 0; (1 << iLog) < iValue; iLog++);
@@ -250,7 +250,7 @@ MEMPOOLITE_PRIVATE_API int mempoolite_logarithm(const int iValue)
  ** size returned omits the 8-byte header overhead.  This only
  ** works for chunks that are currently checked out.
  */
-MEMPOOLITE_PRIVATE_API int mempoolite_size(const mempoolite_t *handle, const void *p)
+static int mempoolite_size(const mempoolite_t *handle, const void *p)
 {
 	int iSize = 0;
 	if (p) {
@@ -266,7 +266,7 @@ MEMPOOLITE_PRIVATE_API int mempoolite_size(const mempoolite_t *handle, const voi
  ** Link the chunk at handle->aPool[i] so that is on the iLogsize
  ** free list.
  */
-MEMPOOLITE_PRIVATE_API void mempoolite_link(mempoolite_t *handle, const int i,
+static void mempoolite_link(mempoolite_t *handle, const int i,
 									  const int iLogsize)
 {
 	int x;
@@ -287,7 +287,7 @@ MEMPOOLITE_PRIVATE_API void mempoolite_link(mempoolite_t *handle, const int i,
  ** Unlink the chunk at handle->aPool[i] from list it is currently
  ** on.  It should be found on handle->aiFreelist[iLogsize].
  */
-MEMPOOLITE_PRIVATE_API void mempoolite_unlink(mempoolite_t *handle, const int i,
+static void mempoolite_unlink(mempoolite_t *handle, const int i,
 										const int iLogsize)
 {
 	int next, prev;
@@ -312,7 +312,7 @@ MEMPOOLITE_PRIVATE_API void mempoolite_unlink(mempoolite_t *handle, const int i,
  ** Find the first entry on the freelist iLogsize.  Unlink that
  ** entry and return its index.
  */
-MEMPOOLITE_PRIVATE_API int mempoolite_unlink_first(mempoolite_t *handle,
+static int mempoolite_unlink_first(mempoolite_t *handle,
 											 const int iLogsize)
 {
 	int i;
@@ -339,7 +339,7 @@ MEMPOOLITE_PRIVATE_API int mempoolite_unlink_first(mempoolite_t *handle,
  ** routine so there is never any chance that two or more
  ** threads can be in this routine at the same time.
  */
-MEMPOOLITE_PRIVATE_API void *mempoolite_malloc_unsafe(mempoolite_t *handle,
+static void *mempoolite_malloc_unsafe(mempoolite_t *handle,
 												const int nByte)
 {
 	int i; /* Index of a handle->aPool[] slot */
@@ -409,7 +409,7 @@ MEMPOOLITE_PRIVATE_API void *mempoolite_malloc_unsafe(mempoolite_t *handle,
 /*
  ** Free an outstanding memory allocation.
  */
-MEMPOOLITE_PRIVATE_API void mempoolite_free_unsafe(mempoolite_t *handle,
+static void mempoolite_free_unsafe(mempoolite_t *handle,
 											 const void *pOld)
 {
 	uint32_t size, iLogsize;
