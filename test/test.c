@@ -1,9 +1,27 @@
+#include "mempoolite.h"
+
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifdef _WIN32
+#include <windows.h>
+
+typedef HANDLE pthread_t;
+typedef CRITICAL_SECTION pthread_mutex_t;
+
+#define pthread_create(pThread, pAttr, pStartRoutine, pArg)	\
+		*pThread = CreateThread(pAttr, 0, pStartRoutine,pArg, 0, NULL);
+#define pthread_join(thread, ppValue)	WaitForSingleObject(thread, INFINITE)
+
+#define pthread_mutex_init(pMutex, pAttr)	InitializeCriticalSection(pMutex)
+int pthread_mutex_lock(pthread_mutex_t *mutex);
+int pthread_mutex_unlock(pthread_mutex_t *mutex);
+#define pthread_mutex_destroy(pMutex)	DeleteCriticalSection(pMutex)
+#define usleep(useconds)	Sleep(useconds / 1000)
+#else
 #include <pthread.h>
 #include <unistd.h>
-
-#include "mempoolite.h"
+#endif /* #ifdef _WIN32 */
 
 typedef struct multithreaded_param {
 	size_t index;
@@ -11,7 +29,11 @@ typedef struct multithreaded_param {
 	int req_size;
 } multithreaded_param_t;
 
+#ifdef _WIN32
+DWORD WINAPI
+#else
 void *
+#endif /* #ifdef _WIN32 */
 multithreaded_main(void *args) {
 	multithreaded_param_t *param;
 	void *buffer;
@@ -28,8 +50,11 @@ multithreaded_main(void *args) {
 		/* Sleep for 1 millisecond to give other threads to run */
 		usleep(1000);
 	}
-
+#ifdef _WIN32
+	return 0;
+#else
 	return NULL;
+#endif /* #ifndef _WIN32 */
 }
 
 int
@@ -64,10 +89,10 @@ main() {
 		printf("buffer = %p size = %u minimum alloc = %u\n", large_buffer, buffer_size,
 				min_alloc);
 
-		mempoolite_init(&mempool, large_buffer, buffer_size, min_alloc, NULL);
+		mempoolite_init(&mempool, large_buffer, (const int)buffer_size, (const int)min_alloc, NULL);
 		printf("Single-threaded test...\n");
 		alloc_counter = 1;
-		while ((alloc_ret = mempoolite_malloc(&mempool, min_alloc)) != NULL) {
+		while ((alloc_ret = mempoolite_malloc(&mempool, (const int)min_alloc)) != NULL) {
 			printf("malloc = %p counter = %u\n", alloc_ret, alloc_counter);
 			alloc_counter++;
 		}
@@ -77,13 +102,13 @@ main() {
 		pool_lock.arg = (void *) &mutex;
 		pool_lock.acquire = (int (*)(void *))pthread_mutex_lock;
 		pool_lock.release = (int (*)(void *))pthread_mutex_unlock;
-		mempoolite_init(&mempool, large_buffer, buffer_size, min_alloc, &pool_lock);
+		mempoolite_init(&mempool, large_buffer, (const int)buffer_size, (const int)min_alloc, &pool_lock);
 		threads = (pthread_t *) malloc(sizeof (*threads) * num_threads);
 		threads_param = (multithreaded_param_t *) malloc(sizeof (*threads_param) * num_threads);
 		/* Run all the threads */
 		for (alloc_counter = 0; alloc_counter < num_threads; alloc_counter++) {
 			threads_param[alloc_counter].index = alloc_counter;
-			threads_param[alloc_counter].req_size = min_alloc;
+			threads_param[alloc_counter].req_size = (const int)min_alloc;
 			threads_param[alloc_counter].pool = &mempool;
 			pthread_create(&threads[alloc_counter], NULL, multithreaded_main, &threads_param[alloc_counter]);
 		}
@@ -105,3 +130,23 @@ main() {
 
 	return 0;
 }
+
+#ifdef _WIN32
+int pthread_mutex_lock(pthread_mutex_t *mutex)
+{
+	int iRet = 0;
+
+	EnterCriticalSection(mutex);
+
+	return iRet;
+}
+
+int pthread_mutex_unlock(pthread_mutex_t *mutex)
+{
+	int iRet = 0;
+
+	LeaveCriticalSection(mutex);
+
+	return iRet;
+}
+#endif /* #ifdef _WIN32 */
