@@ -33,6 +33,10 @@ struct mempoolite_link
 #define MEMPOOLITE_CTRL_LOGSIZE  0x1f    /* Log2 Size of this block */
 #define MEMPOOLITE_CTRL_FREE     0x20    /* True if not checked out */
 
+#ifdef _WIN32
+#define snprintf(buf, buf_size, format, ...)	_snprintf(buf, buf_size, format, ## __VA_ARGS__)
+#endif /* #ifdef _WIN32 */
+
 /*
  ** Assuming mempoolite_t.zPool is divided up into an array of mempoolite_link_t
  ** structures, return a pointer to the idx-th such lik.
@@ -110,7 +114,7 @@ MEMPOOLITE_API int mempoolite_init(mempoolite_t *handle, const void *buf,
 	for (ii = MEMPOOLITE_LOGMAX; ii >= 0; ii--) {
 		int nAlloc = (1 << ii);
 		if ((iOffset + nAlloc) <= handle->nBlock) {
-			handle->aCtrl[iOffset] = ii | MEMPOOLITE_CTRL_FREE;
+			handle->aCtrl[iOffset] = (uint8_t)(ii | MEMPOOLITE_CTRL_FREE);
 			mempoolite_link(handle, iOffset, ii);
 			iOffset += nAlloc;
 		}
@@ -384,10 +388,10 @@ static void *mempoolite_malloc_unsafe(mempoolite_t *handle,
 
 		iBin--;
 		newSize = 1 << iBin;
-		handle->aCtrl[i + newSize] = MEMPOOLITE_CTRL_FREE | iBin;
+		handle->aCtrl[i + newSize] = (uint8_t)(MEMPOOLITE_CTRL_FREE | iBin);
 		mempoolite_link(handle, i + newSize, iBin);
 	}
-	handle->aCtrl[i] = iLogsize;
+	handle->aCtrl[i] = (uint8_t)iLogsize;
 
 	/* Update allocator performance statistics. */
 	handle->nAlloc++;
@@ -438,7 +442,7 @@ static void mempoolite_free_unsafe(mempoolite_t *handle,
 	assert(handle->currentOut > 0 || handle->currentCount == 0);
 	assert(handle->currentCount > 0 || handle->currentOut == 0);
 
-	handle->aCtrl[iBlock] = MEMPOOLITE_CTRL_FREE | iLogsize;
+	handle->aCtrl[iBlock] = (uint8_t)(MEMPOOLITE_CTRL_FREE | iLogsize);
 	while (iLogsize < MEMPOOLITE_LOGMAX) {
 		int iBuddy;
 		if ((iBlock >> iLogsize) & 1) {
@@ -453,12 +457,12 @@ static void mempoolite_free_unsafe(mempoolite_t *handle,
 		mempoolite_unlink(handle, iBuddy, iLogsize);
 		iLogsize++;
 		if (iBuddy < iBlock) {
-			handle->aCtrl[iBuddy] = MEMPOOLITE_CTRL_FREE | iLogsize;
+			handle->aCtrl[iBuddy] = (uint8_t)(MEMPOOLITE_CTRL_FREE | iLogsize);
 			handle->aCtrl[iBlock] = 0;
 			iBlock = iBuddy;
 		}
 		else {
-			handle->aCtrl[iBlock] = MEMPOOLITE_CTRL_FREE | iLogsize;
+			handle->aCtrl[iBlock] = (uint8_t)(MEMPOOLITE_CTRL_FREE | iLogsize);
 			handle->aCtrl[iBuddy] = 0;
 		}
 		size *= 2;

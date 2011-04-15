@@ -43,7 +43,11 @@
 #ifndef MEMPOOLITE_H
 #define MEMPOOLITE_H
 
+#ifdef _WIN32
+#include "pstdint.h"
+#else
 #include <stdint.h>
+#endif /* #ifdef _WIN32 */
 
 /**
  * @brief The function call returns success
@@ -130,6 +134,10 @@ typedef struct mempoolite
  */
 typedef int (*mempoolite_putsfunc_t)(const char* stats);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Initialize the memory pool object.
  * @param[in,out] handle Pointer to a @ref mempoolite_t object which is allocated
@@ -211,5 +219,9 @@ MEMPOOLITE_API void mempoolite_print_stats(const mempoolite_t * const handle,
  * @brief Macro to return the number of times mempoolite_malloc() has been called.
  */
 #define mempoolite_alloc_count(handle)	(((handle) != NULL)? (handle)->nAlloc : 0)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* #ifndef MEMPOOLITE_H */
