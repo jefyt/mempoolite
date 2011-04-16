@@ -82,8 +82,7 @@
 /**
  * @brief Lock object to be used in a threadsafe memory pool
  */
-typedef struct mempoolite_lock
-{
+typedef struct mempoolite_lock {
 	void *arg; /**< Argument to be passed to acquire and release function
 		pointers */
 	int (*acquire)(void *arg); /**< Function pointer to acquire a lock */
@@ -93,8 +92,7 @@ typedef struct mempoolite_lock
 /**
  * @brief Memory pool object
  */
-typedef struct mempoolite
-{
+typedef struct mempoolite {
 	/*-------------------------------
 	  Memory available for allocation
 	  -------------------------------*/
@@ -164,8 +162,8 @@ extern "C" {
  *         parameters error.
  */
 MEMPOOLITE_API int mempoolite_init(mempoolite_t *handle, const void *buf,
-							 const int buf_size, const int min_alloc,
-							 const mempoolite_lock_t *lock);
+								   const int buf_size, const int min_alloc,
+								   const mempoolite_lock_t *lock);
 
 /**
  * @brief Allocate bytes of memory
@@ -195,7 +193,7 @@ MEMPOOLITE_API void mempoolite_free(mempoolite_t *handle, const void *pPrior);
  * @return Non-NULL on success, NULL otherwise
  */
 MEMPOOLITE_API void *mempoolite_realloc(mempoolite_t *handle, const void *pPrior,
-								  const int nBytes);
+										const int nBytes);
 
 /**
  * @brief Round up a request size to the next valid allocation size.
@@ -213,7 +211,7 @@ MEMPOOLITE_API int mempoolite_roundup(mempoolite_t *handle, const int n);
  *                    @ref mempoolite_logfunc_t for the prototype of this function.
  */
 MEMPOOLITE_API void mempoolite_print_stats(const mempoolite_t * const handle,
-								  const mempoolite_putsfunc_t logfunc);
+										   const mempoolite_putsfunc_t logfunc);
 
 /**
  * @brief Macro to return the number of times mempoolite_malloc() has been called.

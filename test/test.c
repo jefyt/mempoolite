@@ -32,9 +32,11 @@ typedef struct multithreaded_param {
 #ifdef _WIN32
 DWORD WINAPI
 #else
+
 void *
 #endif /* #ifdef _WIN32 */
-multithreaded_main(void *args) {
+multithreaded_main(void *args)
+{
 	multithreaded_param_t *param;
 	void *buffer;
 	int round_size;
@@ -58,7 +60,8 @@ multithreaded_main(void *args) {
 }
 
 int
-main() {
+main()
+{
 	size_t alloc_counter;
 	size_t buffer_size;
 	size_t min_alloc;
@@ -86,13 +89,14 @@ main() {
 		scanf_ret = scanf("%u", &num_threads);
 		large_buffer = malloc(buffer_size);
 
-		printf("buffer = %p size = %u minimum alloc = %u\n", large_buffer, buffer_size,
-				min_alloc);
+		printf("buffer = %p size = %u minimum alloc = %u\n", large_buffer,
+			buffer_size, min_alloc);
 
-		mempoolite_init(&mempool, large_buffer, (const int)buffer_size, (const int)min_alloc, NULL);
+		mempoolite_init(&mempool, large_buffer, (const int) buffer_size,
+						(const int) min_alloc, NULL);
 		printf("Single-threaded test...\n");
 		alloc_counter = 1;
-		while ((alloc_ret = mempoolite_malloc(&mempool, (const int)min_alloc)) != NULL) {
+		while ((alloc_ret = mempoolite_malloc(&mempool, (const int) min_alloc)) != NULL) {
 			printf("malloc = %p counter = %u\n", alloc_ret, alloc_counter);
 			alloc_counter++;
 		}
@@ -102,15 +106,17 @@ main() {
 		pool_lock.arg = (void *) &mutex;
 		pool_lock.acquire = (int (*)(void *))pthread_mutex_lock;
 		pool_lock.release = (int (*)(void *))pthread_mutex_unlock;
-		mempoolite_init(&mempool, large_buffer, (const int)buffer_size, (const int)min_alloc, &pool_lock);
+		mempoolite_init(&mempool, large_buffer, (const int) buffer_size,
+						(const int) min_alloc, &pool_lock);
 		threads = (pthread_t *) malloc(sizeof (*threads) * num_threads);
 		threads_param = (multithreaded_param_t *) malloc(sizeof (*threads_param) * num_threads);
 		/* Run all the threads */
 		for (alloc_counter = 0; alloc_counter < num_threads; alloc_counter++) {
 			threads_param[alloc_counter].index = alloc_counter;
-			threads_param[alloc_counter].req_size = (const int)min_alloc;
+			threads_param[alloc_counter].req_size = (const int) min_alloc;
 			threads_param[alloc_counter].pool = &mempool;
-			pthread_create(&threads[alloc_counter], NULL, multithreaded_main, &threads_param[alloc_counter]);
+			pthread_create(&threads[alloc_counter], NULL, multithreaded_main,
+						&threads_param[alloc_counter]);
 		}
 		/* Wait for all the threads to finish */
 		for (alloc_counter = 0; alloc_counter < num_threads; alloc_counter++) {
@@ -124,7 +130,7 @@ main() {
 
 		printf("Test again? <0:false, non-zero:true>: ");
 		scanf_ret = scanf("%d", &test_again);
-	}	while (test_again);
+	} while (test_again);
 
 	pthread_mutex_destroy(&mutex);
 
@@ -132,6 +138,7 @@ main() {
 }
 
 #ifdef _WIN32
+
 int pthread_mutex_lock(pthread_mutex_t *mutex)
 {
 	int iRet = 0;

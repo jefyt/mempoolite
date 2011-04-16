@@ -21,8 +21,7 @@
  */
 typedef struct mempoolite_link mempoolite_link_t;
 
-struct mempoolite_link
-{
+struct mempoolite_link {
 	int next; /* Index of next free chunk */
 	int prev; /* Index of previous free chunk */
 };
@@ -54,19 +53,19 @@ struct mempoolite_link
 static int mempoolite_logarithm(const int iValue);
 static int mempoolite_size(const mempoolite_t *handle, const void *p);
 static void mempoolite_link(mempoolite_t *handle, const int i,
-									  const int iLogsize);
+							const int iLogsize);
 static void mempoolite_unlink(mempoolite_t *handle, const int i,
-										const int iLogsize);
+							  const int iLogsize);
 static int mempoolite_unlink_first(mempoolite_t *handle,
-											 const int iLogsize);
+								   const int iLogsize);
 static void *mempoolite_malloc_unsafe(mempoolite_t *handle,
-												const int nByte);
+									  const int nByte);
 static void mempoolite_free_unsafe(mempoolite_t *handle,
-											 const void *pOld);
+								   const void *pOld);
 
 MEMPOOLITE_API int mempoolite_init(mempoolite_t *handle, const void *buf,
-							 const int buf_size, const int min_alloc,
-							 const mempoolite_lock_t *lock)
+								   const int buf_size, const int min_alloc,
+								   const mempoolite_lock_t *lock)
 {
 	int ii; /* Loop counter */
 	int nByte; /* Number of bytes of memory available to this allocator */
@@ -114,7 +113,7 @@ MEMPOOLITE_API int mempoolite_init(mempoolite_t *handle, const void *buf,
 	for (ii = MEMPOOLITE_LOGMAX; ii >= 0; ii--) {
 		int nAlloc = (1 << ii);
 		if ((iOffset + nAlloc) <= handle->nBlock) {
-			handle->aCtrl[iOffset] = (uint8_t)(ii | MEMPOOLITE_CTRL_FREE);
+			handle->aCtrl[iOffset] = (uint8_t) (ii | MEMPOOLITE_CTRL_FREE);
 			mempoolite_link(handle, iOffset, ii);
 			iOffset += nAlloc;
 		}
@@ -153,7 +152,7 @@ MEMPOOLITE_API void mempoolite_free(mempoolite_t *handle, const void *pPrior)
 }
 
 MEMPOOLITE_API void *mempoolite_realloc(mempoolite_t *handle, const void *pPrior,
-								  const int nBytes)
+										const int nBytes)
 {
 	int nOld;
 	void *p;
@@ -194,7 +193,7 @@ MEMPOOLITE_API int mempoolite_roundup(mempoolite_t *handle, const int n)
 }
 
 MEMPOOLITE_API void mempoolite_print_stats(const mempoolite_t * const handle,
-								  const mempoolite_putsfunc_t putsfunc)
+										   const mempoolite_putsfunc_t putsfunc)
 {
 	if ((handle != NULL) && (putsfunc != NULL)) {
 		char zStats[256];
@@ -271,7 +270,7 @@ static int mempoolite_size(const mempoolite_t *handle, const void *p)
  ** free list.
  */
 static void mempoolite_link(mempoolite_t *handle, const int i,
-									  const int iLogsize)
+							const int iLogsize)
 {
 	int x;
 	assert(i >= 0 && i < handle->nBlock);
@@ -292,7 +291,7 @@ static void mempoolite_link(mempoolite_t *handle, const int i,
  ** on.  It should be found on handle->aiFreelist[iLogsize].
  */
 static void mempoolite_unlink(mempoolite_t *handle, const int i,
-										const int iLogsize)
+							  const int iLogsize)
 {
 	int next, prev;
 	assert(i >= 0 && i < handle->nBlock);
@@ -317,7 +316,7 @@ static void mempoolite_unlink(mempoolite_t *handle, const int i,
  ** entry and return its index.
  */
 static int mempoolite_unlink_first(mempoolite_t *handle,
-											 const int iLogsize)
+								   const int iLogsize)
 {
 	int i;
 	int iFirst;
@@ -344,7 +343,7 @@ static int mempoolite_unlink_first(mempoolite_t *handle,
  ** threads can be in this routine at the same time.
  */
 static void *mempoolite_malloc_unsafe(mempoolite_t *handle,
-												const int nByte)
+									  const int nByte)
 {
 	int i; /* Index of a handle->aPool[] slot */
 	int iBin; /* Index into handle->aiFreelist[] */
@@ -388,10 +387,10 @@ static void *mempoolite_malloc_unsafe(mempoolite_t *handle,
 
 		iBin--;
 		newSize = 1 << iBin;
-		handle->aCtrl[i + newSize] = (uint8_t)(MEMPOOLITE_CTRL_FREE | iBin);
+		handle->aCtrl[i + newSize] = (uint8_t) (MEMPOOLITE_CTRL_FREE | iBin);
 		mempoolite_link(handle, i + newSize, iBin);
 	}
-	handle->aCtrl[i] = (uint8_t)iLogsize;
+	handle->aCtrl[i] = (uint8_t) iLogsize;
 
 	/* Update allocator performance statistics. */
 	handle->nAlloc++;
@@ -414,7 +413,7 @@ static void *mempoolite_malloc_unsafe(mempoolite_t *handle,
  ** Free an outstanding memory allocation.
  */
 static void mempoolite_free_unsafe(mempoolite_t *handle,
-											 const void *pOld)
+								   const void *pOld)
 {
 	uint32_t size, iLogsize;
 	int iBlock;
@@ -442,7 +441,7 @@ static void mempoolite_free_unsafe(mempoolite_t *handle,
 	assert(handle->currentOut > 0 || handle->currentCount == 0);
 	assert(handle->currentCount > 0 || handle->currentOut == 0);
 
-	handle->aCtrl[iBlock] = (uint8_t)(MEMPOOLITE_CTRL_FREE | iLogsize);
+	handle->aCtrl[iBlock] = (uint8_t) (MEMPOOLITE_CTRL_FREE | iLogsize);
 	while (iLogsize < MEMPOOLITE_LOGMAX) {
 		int iBuddy;
 		if ((iBlock >> iLogsize) & 1) {
@@ -457,12 +456,12 @@ static void mempoolite_free_unsafe(mempoolite_t *handle,
 		mempoolite_unlink(handle, iBuddy, iLogsize);
 		iLogsize++;
 		if (iBuddy < iBlock) {
-			handle->aCtrl[iBuddy] = (uint8_t)(MEMPOOLITE_CTRL_FREE | iLogsize);
+			handle->aCtrl[iBuddy] = (uint8_t) (MEMPOOLITE_CTRL_FREE | iLogsize);
 			handle->aCtrl[iBlock] = 0;
 			iBlock = iBuddy;
 		}
 		else {
-			handle->aCtrl[iBlock] = (uint8_t)(MEMPOOLITE_CTRL_FREE | iLogsize);
+			handle->aCtrl[iBlock] = (uint8_t) (MEMPOOLITE_CTRL_FREE | iLogsize);
 			handle->aCtrl[iBuddy] = 0;
 		}
 		size *= 2;
