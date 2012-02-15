@@ -17,19 +17,20 @@ RANLIB=ranlib
 CC=gcc
 CCC=g++
 CXX=g++
-FC=
+FC=gfortran
 AS=as
 
 # Macros
 CND_PLATFORM=GNU-Linux-x86
 CND_CONF=Release
 CND_DISTDIR=dist
+CND_BUILDDIR=build
 
 # Include project Makefile
 include Makefile
 
 # Object Directory
-OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
+OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
@@ -55,29 +56,29 @@ LDLIBSOPTIONS=-lpthread
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-Release.mk dist/Release/test
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/test
 
-dist/Release/test: ${OBJECTFILES}
-	${MKDIR} -p dist/Release
+${CND_DISTDIR}/${CND_CONF}/test: ${OBJECTFILES}
+	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/test -s ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/_ext/1472/test.o: ../test.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1472
 	${RM} $@.d
-	$(COMPILE.c) -O2 -Wall -s -DMPLITE_ENABLED=1 -I../../inc -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/test.o ../test.c
+	$(COMPILE.c) -O2 -Wall -s -I../../inc -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/test.o ../test.c
 
 ${OBJECTDIR}/_ext/1445274692/mplite.o: ../../src/mplite.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1445274692
 	${RM} $@.d
-	$(COMPILE.c) -O2 -Wall -s -DMPLITE_ENABLED=1 -I../../inc -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1445274692/mplite.o ../../src/mplite.c
+	$(COMPILE.c) -O2 -Wall -s -I../../inc -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1445274692/mplite.o ../../src/mplite.c
 
 # Subprojects
 .build-subprojects:
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
-	${RM} -r build/Release
-	${RM} dist/Release/test
+	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
+	${RM} ${CND_DISTDIR}/${CND_CONF}/test
 
 # Subprojects
 .clean-subprojects:

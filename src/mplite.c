@@ -6,12 +6,6 @@
 #include <assert.h>
 
 /*
- ** This version of the memory allocator is used only when
- ** MPLITE_ENABLED is set to 1.
- */
-#if MPLITE_ENABLED
-
-/*
  ** A minimum allocation is an instance of the following structure.
  ** Larger allocations are an array of these structures where the
  ** size of the array is a power of 2.
@@ -468,6 +462,3 @@ static void mplite_free_unsafe(mplite_t *handle,
 	}
 	mplite_link(handle, iBlock, iLogsize);
 }
-
-#endif /* #if MPLITE_ENABLED */
-

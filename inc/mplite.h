@@ -15,9 +15,6 @@
  * from which allocations are made and returned by the mplite_malloc()
  * and mplite_realloc() implementations.
  *
- * This version of the memory allocation subsystem is included
- * in the build only if MPLITE_ENABLED is set to 1.
- *
  * This memory allocator uses the following algorithm:
  *
  *   1.  All memory allocations sizes are rounded up to a power of 2.
