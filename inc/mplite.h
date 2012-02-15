@@ -159,8 +159,8 @@ extern "C" {
  *         parameters error.
  */
 MPLITE_API int mplite_init(mplite_t *handle, const void *buf,
-                                   const int buf_size, const int min_alloc,
-                                   const mplite_lock_t *lock);
+                           const int buf_size, const int min_alloc,
+                           const mplite_lock_t *lock);
 
 /**
  * @brief Allocate bytes of memory
@@ -190,7 +190,7 @@ MPLITE_API void mplite_free(mplite_t *handle, const void *pPrior);
  * @return Non-NULL on success, NULL otherwise
  */
 MPLITE_API void *mplite_realloc(mplite_t *handle, const void *pPrior,
-                                        const int nBytes);
+                                const int nBytes);
 
 /**
  * @brief Round up a request size to the next valid allocation size.
@@ -208,7 +208,7 @@ MPLITE_API int mplite_roundup(mplite_t *handle, const int n);
  *                    @ref mplite_logfunc_t for the prototype of this function.
  */
 MPLITE_API void mplite_print_stats(const mplite_t * const handle,
-                                           const mplite_putsfunc_t logfunc);
+                                   const mplite_putsfunc_t logfunc);
 
 /**
  * @brief Macro to return the number of times mplite_malloc() has been called.

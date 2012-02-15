@@ -27,7 +27,8 @@ struct mplite_link {
 #define MPLITE_CTRL_FREE     0x20    /* True if not checked out */
 
 #ifdef _WIN32
-#define snprintf(buf, buf_size, format, ...)    _snprintf(buf, buf_size, format, ## __VA_ARGS__)
+#define snprintf(buf, buf_size, format, ...) \
+        _snprintf(buf, buf_size, format, ## __VA_ARGS__)
 #endif /* #ifdef _WIN32 */
 
 /*
@@ -46,20 +47,15 @@ struct mplite_link {
 
 static int mplite_logarithm(const int iValue);
 static int mplite_size(const mplite_t *handle, const void *p);
-static void mplite_link(mplite_t *handle, const int i,
-                            const int iLogsize);
-static void mplite_unlink(mplite_t *handle, const int i,
-                              const int iLogsize);
-static int mplite_unlink_first(mplite_t *handle,
-                                   const int iLogsize);
-static void *mplite_malloc_unsafe(mplite_t *handle,
-                                      const int nByte);
-static void mplite_free_unsafe(mplite_t *handle,
-                                   const void *pOld);
+static void mplite_link(mplite_t *handle, const int i, const int iLogsize);
+static void mplite_unlink(mplite_t *handle, const int i, const int iLogsize);
+static int mplite_unlink_first(mplite_t *handle, const int iLogsize);
+static void *mplite_malloc_unsafe(mplite_t *handle, const int nByte);
+static void mplite_free_unsafe(mplite_t *handle, const void *pOld);
 
 MPLITE_API int mplite_init(mplite_t *handle, const void *buf,
-                                   const int buf_size, const int min_alloc,
-                                   const mplite_lock_t *lock)
+                           const int buf_size, const int min_alloc,
+                           const mplite_lock_t *lock)
 {
     int ii; /* Loop counter */
     int nByte; /* Number of bytes of memory available to this allocator */
@@ -146,7 +142,7 @@ MPLITE_API void mplite_free(mplite_t *handle, const void *pPrior)
 }
 
 MPLITE_API void *mplite_realloc(mplite_t *handle, const void *pPrior,
-                                        const int nBytes)
+                                const int nBytes)
 {
     int nOld;
     void *p;
@@ -187,7 +183,7 @@ MPLITE_API int mplite_roundup(mplite_t *handle, const int n)
 }
 
 MPLITE_API void mplite_print_stats(const mplite_t * const handle,
-                                           const mplite_putsfunc_t putsfunc)
+                                   const mplite_putsfunc_t putsfunc)
 {
     if ((handle != NULL) && (putsfunc != NULL)) {
         char zStats[256];
@@ -263,8 +259,7 @@ static int mplite_size(const mplite_t *handle, const void *p)
  ** Link the chunk at handle->aPool[i] so that is on the iLogsize
  ** free list.
  */
-static void mplite_link(mplite_t *handle, const int i,
-                            const int iLogsize)
+static void mplite_link(mplite_t *handle, const int i, const int iLogsize)
 {
     int x;
     assert(i >= 0 && i < handle->nBlock);
@@ -284,8 +279,7 @@ static void mplite_link(mplite_t *handle, const int i,
  ** Unlink the chunk at handle->aPool[i] from list it is currently
  ** on.  It should be found on handle->aiFreelist[iLogsize].
  */
-static void mplite_unlink(mplite_t *handle, const int i,
-                              const int iLogsize)
+static void mplite_unlink(mplite_t *handle, const int i, const int iLogsize)
 {
     int next, prev;
     assert(i >= 0 && i < handle->nBlock);
@@ -309,8 +303,7 @@ static void mplite_unlink(mplite_t *handle, const int i,
  ** Find the first entry on the freelist iLogsize.  Unlink that
  ** entry and return its index.
  */
-static int mplite_unlink_first(mplite_t *handle,
-                                   const int iLogsize)
+static int mplite_unlink_first(mplite_t *handle, const int iLogsize)
 {
     int i;
     int iFirst;
@@ -336,8 +329,7 @@ static int mplite_unlink_first(mplite_t *handle,
  ** routine so there is never any chance that two or more
  ** threads can be in this routine at the same time.
  */
-static void *mplite_malloc_unsafe(mplite_t *handle,
-                                      const int nByte)
+static void *mplite_malloc_unsafe(mplite_t *handle, const int nByte)
 {
     int i; /* Index of a handle->aPool[] slot */
     int iBin; /* Index into handle->aiFreelist[] */
@@ -406,8 +398,7 @@ static void *mplite_malloc_unsafe(mplite_t *handle,
 /*
  ** Free an outstanding memory allocation.
  */
-static void mplite_free_unsafe(mplite_t *handle,
-                                   const void *pOld)
+static void mplite_free_unsafe(mplite_t *handle, const void *pOld)
 {
     uint32_t size, iLogsize;
     int iBlock;
