@@ -12,11 +12,11 @@
  *
  * This version of the memory allocation subsystem omits all
  * use of malloc(). The application gives a block of memory
- * from which allocations are made and returned by the mempoolite_malloc()
- * and mempoolite_realloc() implementations.
+ * from which allocations are made and returned by the mplite_malloc()
+ * and mplite_realloc() implementations.
  *
  * This version of the memory allocation subsystem is included
- * in the build only if MEMPOOLITE_ENABLED is set to 1.
+ * in the build only if MPLITE_ENABLED is set to 1.
  *
  * This memory allocator uses the following algorithm:
  *
@@ -40,8 +40,8 @@
  *
  *      N >=  M*(1 + log2(n)/2) - n + 1
  */
-#ifndef MEMPOOLITE_H
-#define MEMPOOLITE_H
+#ifndef MPLITE_H
+#define MPLITE_H
 
 #ifdef _WIN32
 #include "pstdint.h"
@@ -52,47 +52,47 @@
 /**
  * @brief The function call returns success
  */
-#define MEMPOOLITE_OK			0
+#define MPLITE_OK			0
 /**
  * @brief Invalid parameters are passed to a function
  */
-#define MEMPOOLITE_ERR_INVPAR	-1
+#define MPLITE_ERR_INVPAR	-1
 /**
  * @brief Macro to fix unused parameter compiler warning
  */
-#define MEMPOOLITE_UNUSED_PARAM(param)	(void)(param)
+#define MPLITE_UNUSED_PARAM(param)	(void)(param)
 /**
- * @brief Maximum size of any allocation is ((1 << @ref MEMPOOLITE_LOGMAX) *
- *        mempoolite_t.szAtom). Since mempoolite_t.szAtom is always at least 8 and
+ * @brief Maximum size of any allocation is ((1 << @ref MPLITE_LOGMAX) *
+ *        mplite_t.szAtom). Since mplite_t.szAtom is always at least 8 and
  *        32-bit integers are used, it is not actually possible to reach this
  *        limit.
  */
-#define MEMPOOLITE_LOGMAX 30
+#define MPLITE_LOGMAX 30
 /**
  * @brief Maximum allocation size of this memory pool library. All allocations
  *        must be a power of two and must be expressed by a 32-bit signed
  *        integer. Hence the largest allocation is 0x40000000 or 1073741824.
  */
-#define MEMPOOLITE_MAX_ALLOC_SIZE	0x40000000
+#define MPLITE_MAX_ALLOC_SIZE	0x40000000
 /**
  * @brief An indicator that a function is a public API
  */
-#define MEMPOOLITE_API
+#define MPLITE_API
 
 /**
  * @brief Lock object to be used in a threadsafe memory pool
  */
-typedef struct mempoolite_lock {
+typedef struct mplite_lock {
 	void *arg; /**< Argument to be passed to acquire and release function
 		pointers */
 	int (*acquire)(void *arg); /**< Function pointer to acquire a lock */
 	int (*release)(void *arg); /**< Function pointer to release a lock */
-} mempoolite_lock_t;
+} mplite_lock_t;
 
 /**
  * @brief Memory pool object
  */
-typedef struct mempoolite {
+typedef struct mplite {
 	/*-------------------------------
 	  Memory available for allocation
 	  -------------------------------*/
@@ -100,7 +100,7 @@ typedef struct mempoolite {
 	int nBlock; /**< Number of szAtom sized blocks in zPool */
 	uint8_t *zPool; /**< Memory available to be allocated */
 
-	mempoolite_lock_t lock; /**< Lock to control access to the memory allocation
+	mplite_lock_t lock; /**< Lock to control access to the memory allocation
 		subsystem. */
 
 	/*----------------------
@@ -117,20 +117,20 @@ typedef struct mempoolite {
 	uint32_t maxCount; /**< Maximum instantaneous currentCount */
 	uint32_t maxRequest; /**< Largest allocation (exclusive of internal frag) */
 
-	int aiFreelist[MEMPOOLITE_LOGMAX + 1]; /**< List of free blocks. aiFreelist[0]
-		is a list of free blocks of size mempoolite_t.szAtom. aiFreelist[1] holds
+	int aiFreelist[MPLITE_LOGMAX + 1]; /**< List of free blocks. aiFreelist[0]
+		is a list of free blocks of size mplite_t.szAtom. aiFreelist[1] holds
 		blocks of size szAtom * 2 and so forth.*/
 
 	uint8_t *aCtrl; /**< Space for tracking which blocks are checked out and the
 		size of each block.  One byte per block. */
-} mempoolite_t;
+} mplite_t;
 
 /**
- * @brief Print string function pointer to be passed to @ref mempoolite_print_stats
+ * @brief Print string function pointer to be passed to @ref mplite_print_stats
  *        function. This must be same as stdio's puts function mechanism which
  *        automatically appends a new line character in every call.
  */
-typedef int (*mempoolite_putsfunc_t)(const char* stats);
+typedef int (*mplite_putsfunc_t)(const char* stats);
 
 #ifdef __cplusplus
 extern "C" {
@@ -138,88 +138,88 @@ extern "C" {
 
 /**
  * @brief Initialize the memory pool object.
- * @param[in,out] handle Pointer to a @ref mempoolite_t object which is allocated
+ * @param[in,out] handle Pointer to a @ref mplite_t object which is allocated
  *                       by the caller either from stack, heap, or application's
  *                       memory space.
  * @param[in] buf Pointer to a large, contiguous chunk of memory space that
- *                @ref mempoolite_t will use to satisfy all of its memory
+ *                @ref mplite_t will use to satisfy all of its memory
  *                allocation needs. This might point to a static array or it
  *                might be memory obtained from some other application-specific
  *                mechanism.
  * @param[in] buf_size The number of bytes of memory space pointed to by @ref
  *                     buf
  * @param[in] min_alloc Minimum size of an allocation. Any call to @ref
- *                      mempoolite_malloc where nBytes is less than min_alloc will
+ *                      mplite_malloc where nBytes is less than min_alloc will
  *                      be rounded up to min_alloc. min_alloc must be a power of
  *                      two.
  * @param[in] lock Pointer to a lock object to control access to the memory
- *                 allocation subsystem of @ref mempoolite_t object. If this is
- *                 @ref NULL, @ref mempoolite_t will be non-threadsafe and can only
+ *                 allocation subsystem of @ref mplite_t object. If this is
+ *                 @ref NULL, @ref mplite_t will be non-threadsafe and can only
  *                 be safely used by a single thread. It is safe to allocate
- *                 this in stack because it will be copied to @ref mempoolite_t
+ *                 this in stack because it will be copied to @ref mplite_t
  *                 object.
- * @return @ref MEMPOOLITE_OK on success and @ref MEMPOOLITE_ERR_INVPAR on invalid
+ * @return @ref MPLITE_OK on success and @ref MPLITE_ERR_INVPAR on invalid
  *         parameters error.
  */
-MEMPOOLITE_API int mempoolite_init(mempoolite_t *handle, const void *buf,
+MPLITE_API int mplite_init(mplite_t *handle, const void *buf,
 								   const int buf_size, const int min_alloc,
-								   const mempoolite_lock_t *lock);
+								   const mplite_lock_t *lock);
 
 /**
  * @brief Allocate bytes of memory
- * @param[in,out] handle Pointer to an initialized @ref mempoolite_t object
+ * @param[in,out] handle Pointer to an initialized @ref mplite_t object
  * @param[in] nBytes Number of bytes to allocate
  * @return Non-NULL on success, NULL otherwise
  */
-MEMPOOLITE_API void *mempoolite_malloc(mempoolite_t *handle, const int nBytes);
+MPLITE_API void *mplite_malloc(mplite_t *handle, const int nBytes);
 
 /**
  * @brief Free memory
- * @param[in,out] handle Pointer to an initialized @ref mempoolite_t object
+ * @param[in,out] handle Pointer to an initialized @ref mplite_t object
  * @param[in] pPrior Allocated buffer
  */
-MEMPOOLITE_API void mempoolite_free(mempoolite_t *handle, const void *pPrior);
+MPLITE_API void mplite_free(mplite_t *handle, const void *pPrior);
 
 /**
  * @brief Change the size of an existing memory allocation.
- * @param[in,out] handle Pointer to an initialized @ref mempoolite_t object
+ * @param[in,out] handle Pointer to an initialized @ref mplite_t object
  * @param[in] pPrior Existing allocated memory
  * @param[in] nBytes Size of the new memory allocation. This is always a value
- *                   obtained from a prior call to mempoolite_roundup(). Hence,
+ *                   obtained from a prior call to mplite_roundup(). Hence,
  *                   this is always a non-negative power of two. If nBytes == 0
  *                   that means that an oversize allocation (an allocation
- *                   larger than @ref MEMPOOLITE_MAX_ALLOC_SIZE) was requested and
+ *                   larger than @ref MPLITE_MAX_ALLOC_SIZE) was requested and
  *                   this routine should return NULL without freeing pPrior.
  * @return Non-NULL on success, NULL otherwise
  */
-MEMPOOLITE_API void *mempoolite_realloc(mempoolite_t *handle, const void *pPrior,
+MPLITE_API void *mplite_realloc(mplite_t *handle, const void *pPrior,
 										const int nBytes);
 
 /**
  * @brief Round up a request size to the next valid allocation size.
- * @param[in,out] handle Pointer to an initialized @ref mempoolite_t object
+ * @param[in,out] handle Pointer to an initialized @ref mplite_t object
  * @param[in] n Request size
  * @return Positive non-zero value if the size can be allocated or zero if the
  *         allocation is too large to be handled.
  */
-MEMPOOLITE_API int mempoolite_roundup(mempoolite_t *handle, const int n);
+MPLITE_API int mplite_roundup(mplite_t *handle, const int n);
 
 /**
  * @brief Print the statistics of the memory pool object
- * @param[in,out] handle Pointer to an initialized @ref mempoolite_t object
+ * @param[in,out] handle Pointer to an initialized @ref mplite_t object
  * @param[in] logfunc Non-NULL log function of the caller. Refer to
- *                    @ref mempoolite_logfunc_t for the prototype of this function.
+ *                    @ref mplite_logfunc_t for the prototype of this function.
  */
-MEMPOOLITE_API void mempoolite_print_stats(const mempoolite_t * const handle,
-										   const mempoolite_putsfunc_t logfunc);
+MPLITE_API void mplite_print_stats(const mplite_t * const handle,
+										   const mplite_putsfunc_t logfunc);
 
 /**
- * @brief Macro to return the number of times mempoolite_malloc() has been called.
+ * @brief Macro to return the number of times mplite_malloc() has been called.
  */
-#define mempoolite_alloc_count(handle)	(((handle) != NULL)? (handle)->nAlloc : 0)
+#define mplite_alloc_count(handle)	(((handle) != NULL)? (handle)->nAlloc : 0)
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* #ifndef MEMPOOLITE_H */
+#endif /* #ifndef MPLITE_H */

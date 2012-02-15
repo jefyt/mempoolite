@@ -5,7 +5,7 @@
                    displayName="Header Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
-      <itemPath>../../inc/mempoolite.h</itemPath>
+      <itemPath>../../inc/mplite.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -16,7 +16,7 @@
                    displayName="Source Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
-      <itemPath>../../src/mempoolite.c</itemPath>
+      <itemPath>../../src/mplite.c</itemPath>
       <itemPath>../test.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -51,7 +51,7 @@
           </incDir>
           <commandLine>-Wextra</commandLine>
           <preprocessorList>
-            <Elem>MEMPOOLITE_ENABLED=1</Elem>
+            <Elem>MPLITE_ENABLED=1</Elem>
           </preprocessorList>
           <warningLevel>2</warningLevel>
         </cTool>
@@ -78,7 +78,7 @@
           </incDir>
           <commandLine>-Wextra</commandLine>
           <preprocessorList>
-            <Elem>MEMPOOLITE_ENABLED=1</Elem>
+            <Elem>MPLITE_ENABLED=1</Elem>
           </preprocessorList>
           <warningLevel>2</warningLevel>
         </cTool>

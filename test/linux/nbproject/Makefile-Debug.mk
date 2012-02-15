@@ -34,7 +34,7 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/1472/test.o \
-	${OBJECTDIR}/_ext/1445274692/mempoolite.o
+	${OBJECTDIR}/_ext/1445274692/mplite.o
 
 
 # C Compiler Flags
@@ -64,12 +64,12 @@ dist/Debug/test: ${OBJECTFILES}
 ${OBJECTDIR}/_ext/1472/test.o: ../test.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1472
 	${RM} $@.d
-	$(COMPILE.c) -g -Wall -DMEMPOOLITE_ENABLED=1 -I../../inc -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/test.o ../test.c
+	$(COMPILE.c) -g -Wall -DMPLITE_ENABLED=1 -I../../inc -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1472/test.o ../test.c
 
-${OBJECTDIR}/_ext/1445274692/mempoolite.o: ../../src/mempoolite.c 
+${OBJECTDIR}/_ext/1445274692/mplite.o: ../../src/mplite.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1445274692
 	${RM} $@.d
-	$(COMPILE.c) -g -Wall -DMEMPOOLITE_ENABLED=1 -I../../inc -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1445274692/mempoolite.o ../../src/mempoolite.c
+	$(COMPILE.c) -g -Wall -DMPLITE_ENABLED=1 -I../../inc -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1445274692/mplite.o ../../src/mplite.c
 
 # Subprojects
 .build-subprojects:

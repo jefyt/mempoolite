@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mempoolite", "mempoolite.vcproj", "{D18F1E7D-5C27-410E-9167-18E09426D642}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mplite", "mplite.vcproj", "{D18F1E7D-5C27-410E-9167-18E09426D642}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
