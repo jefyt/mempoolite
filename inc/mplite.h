@@ -49,15 +49,15 @@
 /**
  * @brief The function call returns success
  */
-#define MPLITE_OK			0
+#define MPLITE_OK            0
 /**
  * @brief Invalid parameters are passed to a function
  */
-#define MPLITE_ERR_INVPAR	-1
+#define MPLITE_ERR_INVPAR    -1
 /**
  * @brief Macro to fix unused parameter compiler warning
  */
-#define MPLITE_UNUSED_PARAM(param)	(void)(param)
+#define MPLITE_UNUSED_PARAM(param)    (void)(param)
 /**
  * @brief Maximum size of any allocation is ((1 << @ref MPLITE_LOGMAX) *
  *        mplite_t.szAtom). Since mplite_t.szAtom is always at least 8 and
@@ -70,7 +70,7 @@
  *        must be a power of two and must be expressed by a 32-bit signed
  *        integer. Hence the largest allocation is 0x40000000 or 1073741824.
  */
-#define MPLITE_MAX_ALLOC_SIZE	0x40000000
+#define MPLITE_MAX_ALLOC_SIZE    0x40000000
 /**
  * @brief An indicator that a function is a public API
  */
@@ -80,46 +80,46 @@
  * @brief Lock object to be used in a threadsafe memory pool
  */
 typedef struct mplite_lock {
-	void *arg; /**< Argument to be passed to acquire and release function
-		pointers */
-	int (*acquire)(void *arg); /**< Function pointer to acquire a lock */
-	int (*release)(void *arg); /**< Function pointer to release a lock */
+    void *arg; /**< Argument to be passed to acquire and release function
+        pointers */
+    int (*acquire)(void *arg); /**< Function pointer to acquire a lock */
+    int (*release)(void *arg); /**< Function pointer to release a lock */
 } mplite_lock_t;
 
 /**
  * @brief Memory pool object
  */
 typedef struct mplite {
-	/*-------------------------------
-	  Memory available for allocation
-	  -------------------------------*/
-	int szAtom; /**< Smallest possible allocation in bytes */
-	int nBlock; /**< Number of szAtom sized blocks in zPool */
-	uint8_t *zPool; /**< Memory available to be allocated */
+    /*-------------------------------
+      Memory available for allocation
+      -------------------------------*/
+    int szAtom; /**< Smallest possible allocation in bytes */
+    int nBlock; /**< Number of szAtom sized blocks in zPool */
+    uint8_t *zPool; /**< Memory available to be allocated */
 
-	mplite_lock_t lock; /**< Lock to control access to the memory allocation
-		subsystem. */
+    mplite_lock_t lock; /**< Lock to control access to the memory allocation
+        subsystem. */
 
-	/*----------------------
-	  Performance statistics
-	  ----------------------*/
-	uint64_t nAlloc; /**< Total number of calls to malloc */
-	uint64_t totalAlloc; /**< Total of all malloc calls - includes internal
-		fragmentation */
-	uint64_t totalExcess; /**< Total internal fragmentation */
-	uint32_t currentOut; /**< Current checkout, including internal
-		fragmentation */
-	uint32_t currentCount; /**< Current number of distinct checkouts */
-	uint32_t maxOut; /**< Maximum instantaneous currentOut */
-	uint32_t maxCount; /**< Maximum instantaneous currentCount */
-	uint32_t maxRequest; /**< Largest allocation (exclusive of internal frag) */
+    /*----------------------
+      Performance statistics
+      ----------------------*/
+    uint64_t nAlloc; /**< Total number of calls to malloc */
+    uint64_t totalAlloc; /**< Total of all malloc calls - includes internal
+        fragmentation */
+    uint64_t totalExcess; /**< Total internal fragmentation */
+    uint32_t currentOut; /**< Current checkout, including internal
+        fragmentation */
+    uint32_t currentCount; /**< Current number of distinct checkouts */
+    uint32_t maxOut; /**< Maximum instantaneous currentOut */
+    uint32_t maxCount; /**< Maximum instantaneous currentCount */
+    uint32_t maxRequest; /**< Largest allocation (exclusive of internal frag) */
 
-	int aiFreelist[MPLITE_LOGMAX + 1]; /**< List of free blocks. aiFreelist[0]
-		is a list of free blocks of size mplite_t.szAtom. aiFreelist[1] holds
-		blocks of size szAtom * 2 and so forth.*/
+    int aiFreelist[MPLITE_LOGMAX + 1]; /**< List of free blocks. aiFreelist[0]
+        is a list of free blocks of size mplite_t.szAtom. aiFreelist[1] holds
+        blocks of size szAtom * 2 and so forth.*/
 
-	uint8_t *aCtrl; /**< Space for tracking which blocks are checked out and the
-		size of each block.  One byte per block. */
+    uint8_t *aCtrl; /**< Space for tracking which blocks are checked out and the
+        size of each block.  One byte per block. */
 } mplite_t;
 
 /**
@@ -159,8 +159,8 @@ extern "C" {
  *         parameters error.
  */
 MPLITE_API int mplite_init(mplite_t *handle, const void *buf,
-								   const int buf_size, const int min_alloc,
-								   const mplite_lock_t *lock);
+                                   const int buf_size, const int min_alloc,
+                                   const mplite_lock_t *lock);
 
 /**
  * @brief Allocate bytes of memory
@@ -190,7 +190,7 @@ MPLITE_API void mplite_free(mplite_t *handle, const void *pPrior);
  * @return Non-NULL on success, NULL otherwise
  */
 MPLITE_API void *mplite_realloc(mplite_t *handle, const void *pPrior,
-										const int nBytes);
+                                        const int nBytes);
 
 /**
  * @brief Round up a request size to the next valid allocation size.
@@ -208,12 +208,12 @@ MPLITE_API int mplite_roundup(mplite_t *handle, const int n);
  *                    @ref mplite_logfunc_t for the prototype of this function.
  */
 MPLITE_API void mplite_print_stats(const mplite_t * const handle,
-										   const mplite_putsfunc_t logfunc);
+                                           const mplite_putsfunc_t logfunc);
 
 /**
  * @brief Macro to return the number of times mplite_malloc() has been called.
  */
-#define mplite_alloc_count(handle)	(((handle) != NULL)? (handle)->nAlloc : 0)
+#define mplite_alloc_count(handle)    (((handle) != NULL)? (handle)->nAlloc : 0)
 
 #ifdef __cplusplus
 }
